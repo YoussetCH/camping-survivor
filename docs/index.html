@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Camping Survivor — Game Design Document (GDD v1.2). Supervivencia multijugador en Roblox.">
+  <title>Camping Survivor — GDD</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5/github-markdown.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/github.min.css">
+  <style>
+    :root {
+      --bg: #f6f8fa;
+      --surface: #ffffff;
+      --border: #d0d7de;
+      --text: #1f2328;
+      --muted: #656d76;
+      --accent: #0969da;
+      --accent-hover: #0550ae;
+      --sidebar-width: 280px;
+      --header-height: 56px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #e6edf3;
+        --muted: #8b949e;
+        --accent: #58a6ff;
+        --accent-hover: #79b8ff;
+      }
+
+      .markdown-body {
+        color-scheme: dark;
+        color: var(--text);
+        background-color: transparent;
+      }
+
+      .markdown-body table tr {
+        background-color: var(--surface);
+        border-top: 1px solid var(--border);
+      }
+
+      .markdown-body table tr:nth-child(2n) {
+        background-color: #0d1117;
+      }
+
+      .markdown-body table th,
+      .markdown-body table td {
+        border: 1px solid var(--border);
+      }
+
+      .markdown-body hr {
+        background-color: var(--border);
+      }
+
+      .markdown-body blockquote {
+        border-left-color: var(--border);
+        color: var(--muted);
+      }
+
+      .markdown-body a {
+        color: var(--accent);
+      }
+
+      .markdown-body code,
+      .markdown-body tt {
+        background-color: rgba(110, 118, 129, 0.2);
+      }
+
+      .markdown-body pre {
+        background-color: #0d1117;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0 1.25rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .site-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .site-nav {
+      display: flex;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .site-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid transparent;
+    }
+
+    .site-nav a:hover {
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .site-nav a.active {
+      color: var(--accent);
+      border-color: var(--border);
+      background: var(--bg);
+      font-weight: 600;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      min-height: calc(100vh - var(--header-height));
+    }
+
+    .sidebar {
+      position: sticky;
+      top: var(--header-height);
+      height: calc(100vh - var(--header-height));
+      overflow-y: auto;
+      padding: 1rem;
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .sidebar-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin: 0 0 0.75rem;
+    }
+
+    .toc-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .toc-list a {
+      display: block;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      line-height: 1.4;
+      padding: 0.25rem 0;
+      border-left: 2px solid transparent;
+      padding-left: 0.5rem;
+    }
+
+    .toc-list a:hover,
+    .toc-list a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+
+    .toc-list .toc-h3 {
+      padding-left: 1rem;
+      font-size: 0.75rem;
+    }
+
+    .content-wrap {
+      padding: 2rem 2.5rem 4rem;
+      max-width: 980px;
+    }
+
+    .markdown-body {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem 2.5rem;
+      max-width: none;
+    }
+
+    .markdown-body .mermaid {
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      padding: 1rem;
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .state {
+      padding: 3rem 1rem;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .state.error {
+      color: #cf222e;
+    }
+
+    .footer {
+      margin-top: 2rem;
+      font-size: 0.8125rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.375rem 0.625rem;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 0.875rem;
+    }
+
+    @media (max-width: 960px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .menu-toggle {
+        display: inline-block;
+      }
+
+      .sidebar {
+        display: none;
+        position: fixed;
+        inset: var(--header-height) 0 0 0;
+        z-index: 90;
+        height: auto;
+        width: min(100%, var(--sidebar-width));
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+      }
+
+      .sidebar.open {
+        display: block;
+      }
+
+      .content-wrap {
+        padding: 1rem 1rem 3rem;
+      }
+
+      .markdown-body {
+        padding: 1.25rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <button class="menu-toggle" type="button" aria-label="Abrir índice" id="menuToggle">☰ Índice</button>
+    <h1 class="site-title" id="pageTitle">Camping Survivor — GDD</h1>
+    <nav class="site-nav" aria-label="Documentos">
+      <a href="?doc=gdd" data-doc="gdd">GDD</a>
+      <a href="?doc=implementation" data-doc="implementation">Implementation Plan</a>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Tabla de contenidos">
+      <p class="sidebar-label">Contenido</p>
+      <nav id="toc"><ul class="toc-list"></ul></nav>
+    </aside>
+
+    <main class="content-wrap">
+      <article class="markdown-body" id="content">
+        <div class="state" id="loading">Cargando documento…</div>
+      </article>
+      <p class="footer">Camping Survivor · Documentación de diseño</p>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it@14/dist/markdown-it.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it-anchor@9/dist/markdownItAnchor.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>
+    const DOCS = {
+      gdd: {
+        file: "GDD-Camping-Survivor.md",
+        title: "Camping Survivor — GDD",
+      },
+      implementation: {
+        file: "Implementation-Plan.md",
+        title: "Camping Survivor — Implementation Plan",
+      },
+    };
+
+    const contentEl = document.getElementById("content");
+    const tocEl = document.getElementById("toc");
+    const pageTitleEl = document.getElementById("pageTitle");
+    const sidebarEl = document.getElementById("sidebar");
+    const menuToggleEl = document.getElementById("menuToggle");
+    const navLinks = document.querySelectorAll(".site-nav a[data-doc]");
+
+    function getDocKey() {
+      const params = new URLSearchParams(window.location.search);
+      const doc = params.get("doc") || "gdd";
+      return DOCS[doc] ? doc : "gdd";
+    }
+
+    function setActiveNav(docKey) {
+      navLinks.forEach((link) => {
+        link.classList.toggle("active", link.dataset.doc === docKey);
+      });
+      pageTitleEl.textContent = DOCS[docKey].title;
+      document.title = DOCS[docKey].title;
+    }
+
+    function createMarkdownRenderer() {
+      const md = window.markdownit({
+        html: false,
+        linkify: true,
+        typographer: true,
+        breaks: false,
+      }).use(window.markdownItAnchor, {
+        permalink: false,
+        slugify: window.markdownItAnchor.slugify,
+      });
+
+      const defaultFence = md.renderer.rules.fence;
+
+      md.renderer.rules.fence = function (tokens, idx, options, env, self) {
+        const token = tokens[idx];
+        const lang = (token.info || "").trim().toLowerCase();
+
+        if (lang === "mermaid") {
+          return `<div class="mermaid">${md.utils.escapeHtml(token.content.trim())}</div>\n`;
+        }
+
+        if (lang === "luau" || lang === "lua") {
+          token.info = "lua";
+        }
+
+        return defaultFence(tokens, idx, options, env, self);
+      };
+
+      md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+        const token = tokens[idx];
+        const hrefIndex = token.attrIndex("href");
+
+        if (hrefIndex >= 0) {
+          const href = token.attrs[hrefIndex][1];
+
+          if (href === "Implementation-Plan.md" || href.endsWith("/Implementation-Plan.md")) {
+            token.attrs[hrefIndex][1] = "?doc=implementation";
+          } else if (href === "GDD-Camping-Survivor.md" || href.endsWith("/GDD-Camping-Survivor.md")) {
+            token.attrs[hrefIndex][1] = "?doc=gdd";
+          } else if (href.startsWith("#")) {
+            token.attrSet("class", "heading-link");
+          }
+        }
+
+        return self.renderToken(tokens, idx, options);
+      };
+
+      return md;
+    }
+
+    function buildToc(container) {
+      const headings = container.querySelectorAll("h2, h3");
+      const list = document.createElement("ul");
+      list.className = "toc-list";
+
+      headings.forEach((heading) => {
+        if (!heading.id) {
+          return;
+        }
+
+        const item = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = `#${heading.id}`;
+        link.textContent = heading.textContent || heading.innerText;
+        link.className = heading.tagName === "H3" ? "toc-h3" : "toc-h2";
+
+        link.addEventListener("click", () => {
+          sidebarEl.classList.remove("open");
+        });
+
+        item.appendChild(link);
+        list.appendChild(item);
+      });
+
+      tocEl.replaceChildren(list);
+    }
+
+    function observeHeadings(container) {
+      const links = tocEl.querySelectorAll("a");
+      if (!links.length) {
+        return;
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              links.forEach((link) => {
+                link.classList.toggle("active", link.getAttribute("href") === `#${entry.target.id}`);
+              });
+            }
+          });
+        },
+        { rootMargin: "-20% 0px -70% 0px", threshold: 0 }
+      );
+
+      container.querySelectorAll("h2, h3").forEach((heading) => observer.observe(heading));
+    }
+
+    async function renderDoc(docKey) {
+      const doc = DOCS[docKey];
+      setActiveNav(docKey);
+      contentEl.innerHTML = '<div class="state">Cargando documento…</div>';
+      tocEl.innerHTML = "";
+
+      try {
+        const response = await fetch(doc.file);
+        if (!response.ok) {
+          throw new Error(`No se pudo cargar ${doc.file} (${response.status})`);
+        }
+
+        const markdown = await response.text();
+        const md = createMarkdownRenderer();
+        contentEl.innerHTML = md.render(markdown);
+
+        contentEl.querySelectorAll("pre code").forEach((block) => {
+          window.hljs.highlightElement(block);
+        });
+
+        buildToc(contentEl);
+        observeHeadings(contentEl);
+
+        if (contentEl.querySelector(".mermaid")) {
+          window.mermaid.initialize({
+            startOnLoad: false,
+            theme: window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default",
+            securityLevel: "loose",
+          });
+          await window.mermaid.run({ nodes: contentEl.querySelectorAll(".mermaid") });
+        }
+
+        if (window.location.hash) {
+          const target = document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+          if (target) {
+            target.scrollIntoView();
+          }
+        }
+      } catch (error) {
+        contentEl.innerHTML = `<div class="state error">${error.message}</div>`;
+      }
+    }
+
+    menuToggleEl.addEventListener("click", () => {
+      sidebarEl.classList.toggle("open");
+    });
+
+    navLinks.forEach((link) => {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        const docKey = link.dataset.doc;
+        history.pushState({ doc: docKey }, "", `?doc=${docKey}`);
+        renderDoc(docKey);
+      });
+    });
+
+    window.addEventListener("popstate", () => {
+      renderDoc(getDocKey());
+    });
+
+    renderDoc(getDocKey());
+  </script>
+</body>
+</html>
