@@ -302,7 +302,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/markdown-it@14/dist/markdown-it.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/markdown-it-anchor@9/dist/markdownItAnchor.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
   <script>
@@ -338,16 +337,57 @@
       document.title = DOCS[docKey].title;
     }
 
+    function slugifyHeading(text) {
+      return text
+        .trim()
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}\s-]/gu, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+    }
+
+    function headingAnchorPlugin(md) {
+      md.core.ruler.push("heading_anchor", (state) => {
+        const seen = {};
+        const tokens = state.tokens;
+
+        for (let i = 0; i < tokens.length; i++) {
+          const token = tokens[i];
+          if (token.type !== "heading_open") {
+            continue;
+          }
+
+          const inline = tokens[i + 1];
+          if (!inline || inline.type !== "inline" || !inline.children) {
+            continue;
+          }
+
+          const text = inline.children
+            .filter((child) => child.type === "text" || child.type === "code_inline")
+            .map((child) => child.content)
+            .join("");
+
+          let slug = slugifyHeading(text);
+          if (seen[slug]) {
+            seen[slug] += 1;
+            slug = `${slug}-${seen[slug]}`;
+          } else {
+            seen[slug] = 1;
+          }
+
+          token.attrSet("id", slug);
+        }
+      });
+    }
+
     function createMarkdownRenderer() {
       const md = window.markdownit({
         html: false,
         linkify: true,
         typographer: true,
         breaks: false,
-      }).use(window.markdownItAnchor, {
-        permalink: false,
-        slugify: window.markdownItAnchor.slugify,
-      });
+      }).use(headingAnchorPlugin);
 
       const defaultFence = md.renderer.rules.fence;
 
