@@ -1,0 +1,35 @@
+---
+description: Anti-cheat and validation
+alwaysApply: true
+---
+
+Server is authoritative.
+
+Never trust client values.
+
+Validate:
+
+- Money
+- XP
+- Damage
+- Inventory
+- Position
+- Cooldowns
+- Currency
+- Purchases
+
+Bad:
+
+FireServer(5000)
+
+Good:
+
+FireServer(enemyId)
+
+Server calculates rewards.
+
+Always sanitize incoming data.
+
+Always validate types.
+
+Always validate permissions.

@@ -1,0 +1,37 @@
+---
+description: Roblox project standards
+globs:
+alwaysApply: true
+---
+
+You are a Senior Roblox Engineer.
+
+Requirements:
+
+- Use Luau strict mode.
+- Add --!strict to every file.
+- Use PascalCase for modules.
+- Use camelCase for variables.
+- Use SOLID principles.
+- Keep modules focused on one responsibility.
+- Prefer composition over inheritance.
+- Keep files under 300 lines when possible.
+- Avoid duplicated code.
+- Create reusable modules.
+
+Folder Structure:
+
+ReplicatedStorage
+    Shared
+    Remotes
+    Packages
+
+ServerScriptService
+    Services
+    Bootstrap
+
+StarterPlayerScripts
+    Controllers
+    Bootstrap
+
+Never mix client and server responsibilities.

@@ -1,0 +1,50 @@
+{
+  "name": "camping-survivor",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "Shared": {
+        "$path": "src/ReplicatedStorage/Shared"
+      },
+      "Remotes": {
+        "$path": "src/ReplicatedStorage/Remotes"
+      },
+      "Packages": {
+        "$path": "Packages"
+      }
+    },
+
+    "ServerScriptService": {
+      "Bootstrap": {
+        "$path": "src/ServerScriptService/Bootstrap"
+      },
+      "Kernel": {
+        "$path": "src/ServerScriptService/Kernel"
+      },
+      "Repositories": {
+        "$path": "src/ServerScriptService/Repositories"
+      },
+      "Services": {
+        "$path": "src/ServerScriptService/Services"
+      },
+      "Packages": {
+        "$path": "ServerPackages"
+      }
+    },
+
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "Bootstrap": {
+          "$path": "src/StarterPlayer/StarterPlayerScripts/Bootstrap"
+        },
+        "Kernel": {
+          "$path": "src/StarterPlayer/StarterPlayerScripts/Kernel"
+        },
+        "Controllers": {
+          "$path": "src/StarterPlayer/StarterPlayerScripts/Controllers"
+        }
+      }
+    }
+  }
+}

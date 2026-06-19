@@ -1,0 +1,31 @@
+---
+description: Architecture rules
+alwaysApply: true
+---
+
+Before generating code:
+
+1. Design architecture.
+2. Define services.
+3. Define controllers.
+4. Define remotes.
+5. Define shared modules.
+6. Explain networking flow.
+7. Generate implementation.
+
+Use:
+
+Service Layer
+Controller Layer
+Shared Layer
+
+Business logic belongs only in Services.
+
+Controllers:
+
+- UI
+- Input
+- Camera
+- Sound
+
+Never place business logic inside controllers.

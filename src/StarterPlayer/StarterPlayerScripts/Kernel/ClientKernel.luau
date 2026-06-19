@@ -1,0 +1,102 @@
+--!strict
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
+
+export type LoadedController = {
+	Name: string,
+	Init: (self: LoadedController) -> (),
+	Start: (self: LoadedController) -> (),
+	Destroy: (self: LoadedController) -> ()?,
+}
+
+local ClientKernel = {}
+
+local loadedControllers: { LoadedController } = {}
+local started = false
+local playerScripts = Players.LocalPlayer:WaitForChild("PlayerScripts") :: PlayerScripts
+
+local function getControllerModules(): { ModuleScript }
+	local controllersFolder = playerScripts:WaitForChild("Controllers") :: Folder
+	local modules: { ModuleScript } = {}
+
+	for _, child in controllersFolder:GetChildren() do
+		if child:IsA("ModuleScript") then
+			table.insert(modules, child)
+		end
+	end
+
+	table.sort(modules, function(left, right)
+		return left.Name < right.Name
+	end)
+
+	return modules
+end
+
+function ClientKernel.loadControllers(): { LoadedController }
+	if #loadedControllers > 0 then
+		return loadedControllers
+	end
+
+	for _, moduleScript in getControllerModules() do
+		local controllerModule = require(moduleScript)
+
+		if type(controllerModule) ~= "table" or type(controllerModule.Name) ~= "string" then
+			error(`Controller module "{moduleScript.Name}" must export a table with Name`, 2)
+		end
+
+		table.insert(loadedControllers, controllerModule :: LoadedController)
+		Logger.info("ClientKernel", `Loaded controller: {controllerModule.Name}`)
+	end
+
+	return loadedControllers
+end
+
+function ClientKernel.initControllers(controllers: { LoadedController })
+	for _, controller in controllers do
+		controller:Init()
+		Logger.info("ClientKernel", `Initialized controller: {controller.Name}`)
+	end
+end
+
+function ClientKernel.startControllers(controllers: { LoadedController })
+	if started then
+		return
+	end
+
+	started = true
+
+	for _, controller in controllers do
+		controller:Start()
+		Logger.info("ClientKernel", `Started controller: {controller.Name}`)
+	end
+end
+
+function ClientKernel.destroyControllers(controllers: { LoadedController })
+	for index = #controllers, 1, -1 do
+		local controller = controllers[index]
+		local destroy = controller.Destroy
+
+		if destroy ~= nil then
+			destroy(controller)
+			Logger.info("ClientKernel", `Destroyed controller: {controller.Name}`)
+		end
+	end
+
+	table.clear(loadedControllers)
+	started = false
+end
+
+function ClientKernel.getController(name: string): LoadedController?
+	for _, controller in loadedControllers do
+		if controller.Name == name then
+			return controller
+		end
+	end
+
+	return nil
+end
+
+return ClientKernel
