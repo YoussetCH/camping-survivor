@@ -28,6 +28,11 @@ local es: LocaleTypes.LocaleTable = {
 	["item.bandage.name"] = "Vendaje",
 	["item.sparks.name"] = "Chispas",
 	["item.wood.name"] = "Madera",
+	["item.stone_axe.name"] = "Hacha de piedra",
+
+	["ui.inventory.title"] = "Inventario",
+	["ui.inventory.use"] = "Usar",
+	["ui.inventory.equip"] = "Equipar",
 
 	["recipe.recipe_sparks.name"] = "Chispas",
 	["recipe.recipe_tinder.name"] = "Yesca",

@@ -1,0 +1,90 @@
+## ADDED Requirements
+
+### Requirement: Bag slot capacity
+
+The system SHALL store player items in up to **16** bag slots keyed `"1"` through `"16"`. Each slot holds one stack of an item id with quantity ≥ 1.
+
+#### Scenario: Bag full
+
+- GIVEN a player occupies all 16 bag slots with non-stackable or full stacks
+- WHEN the server attempts to grant another item that cannot merge
+- THEN the grant fails without mutating inventory
+- AND the client receives no erroneous sync
+
+### Requirement: Stack limits
+
+The system SHALL enforce per-item `maxStack` from `Items` when merging stacks in the same bag slot or granting items.
+
+#### Scenario: Merge sticks
+
+- GIVEN bag slot `"1"` contains `stick` × 28 (maxStack 30)
+- WHEN the server grants `stick` × 3
+- THEN slot `"1"` becomes `stick` × 30
+- AND remaining quantity fills the next available slot or fails if none
+
+### Requirement: Hotbar
+
+The system SHALL persist a **6-slot** hotbar referencing bag slot keys. Hotbar entries MAY be empty.
+
+#### Scenario: Assign hotbar slot
+
+- GIVEN bag slot `"3"` contains `flint` × 2
+- WHEN the client fires `SetHotbarSlotEvent` with hotbarIndex 1 and bagSlotKey `"3"`
+- THEN hotbar slot 1 references bag slot `"3"`
+- AND `InventoryUpdatedEvent` includes the updated hotbar
+
+#### Scenario: Invalid hotbar index rejected
+
+- GIVEN a client sends hotbarIndex 0 or 7
+- WHEN the server validates the request
+- THEN the request is rejected without mutation
+
+### Requirement: Tool equip slot
+
+The system SHALL allow equipping one tool from the bag. Equipped tool id is stored in `equipped.toolItemId`.
+
+#### Scenario: Equip tool
+
+- GIVEN bag slot `"2"` contains a `tool` category item
+- WHEN the client fires `EquipItemEvent` with bagSlotKey `"2"`
+- THEN `equipped.toolItemId` matches that item id
+- AND inventory sync reflects equipped state
+
+#### Scenario: Non-tool rejected
+
+- GIVEN bag slot `"1"` contains `stick`
+- WHEN the client fires `EquipItemEvent` with bagSlotKey `"1"`
+- THEN the request is rejected
+
+### Requirement: Item use (v0.1)
+
+The system SHALL process `UseItemEvent` server-side. v0.1 supports `bandage`: consume 1 and increase survival health by **15** (clamped to 100).
+
+#### Scenario: Use bandage
+
+- GIVEN bag slot `"4"` contains `bandage` × 1 and health is 70
+- WHEN the client fires `UseItemEvent` with bagSlotKey `"4"`
+- THEN quantity becomes 0 and the slot is cleared
+- AND health becomes 85
+- AND survival and inventory sync events fire
+
+### Requirement: Inventory sync payload
+
+The server SHALL fire `InventoryUpdatedEvent` after any inventory, hotbar, or equip mutation with `{ inventory, hotbar, equipped }`.
+
+#### Scenario: After grant
+
+- GIVEN the server grants items to a player
+- WHEN the grant completes
+- THEN the client receives `InventoryUpdatedEvent` with the full snapshot
+
+### Requirement: Death penalty compatibility
+
+Random inventory loss on death (GDD 35%) SHALL operate on occupied bag slots and clear hotbar references to removed slots.
+
+#### Scenario: Death removes slot referenced by hotbar
+
+- GIVEN hotbar slot 2 references bag slot `"5"`
+- WHEN death penalty removes bag slot `"5"`
+- THEN hotbar slot 2 becomes empty
+- AND sync reflects both changes

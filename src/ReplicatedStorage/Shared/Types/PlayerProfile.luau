@@ -1,18 +1,16 @@
 --!strict
 
 local CampTypes = require(script.Parent.Camp)
+local InventoryTypes = require(script.Parent.Inventory)
 local PlayerSettingsTypes = require(script.Parent.PlayerSettings)
 local SurvivalTypes = require(script.Parent.Survival)
 
-export type InventoryItem = {
-	itemId: string,
-	quantity: number,
-	metadata: { [string]: unknown }?,
-}
+export type InventoryItem = InventoryTypes.InventoryItem
 
 export type InventorySnapshot = {
-	inventory: { InventoryItem },
-	hotbar: { string }?,
+	inventory: InventoryTypes.BagSlots,
+	hotbar: InventoryTypes.HotbarSlots,
+	equipped: InventoryTypes.EquippedItems,
 }
 
 export type PlayerStats = {
@@ -24,7 +22,9 @@ export type PlayerStats = {
 
 export type PlayerProfile = {
 	currency: number,
-	inventory: { InventoryItem },
+	inventory: InventoryTypes.BagSlots,
+	hotbar: InventoryTypes.HotbarSlots,
+	equipped: InventoryTypes.EquippedItems,
 	stats: PlayerStats,
 	quests: { [string]: unknown },
 	settings: PlayerSettingsTypes.PlayerSettings,

@@ -11,25 +11,32 @@ This project follows enterprise-grade Roblox architecture and **OpenSpec-compati
 | [openspec/config.yaml](openspec/config.yaml) | AI context, capabilities map |
 | [openspec/specs/](openspec/specs/) | Living technical specs per capability |
 
-## OpenSpec-compatible workflow (required)
+## OpenSpec workflow (required)
+
+Use **Cursor slash commands** ([OpenSpec docs](https://github.com/Fission-AI/OpenSpec)):
+
+| Command | Purpose |
+|---------|---------|
+| `/opsx:propose <idea>` | Create change + artifacts (proposal, specs, design, tasks, verify) |
+| `/opsx:apply` | Implement tasks from active change |
+| `/opsx:archive` | Merge spec deltas and archive (after verify + user approval) |
+
+Default schema: `roblox-slice` in [openspec/config.yaml](openspec/config.yaml).
 
 Before implementing any feature:
 
-1. **Read the active change** in `openspec/changes/<slice-id>/`:
-   - `proposal.md` → `design.md` → `specs/` → `tasks.md` → `verify.md`
-2. **Read** the capability spec in `openspec/specs/<capability>/spec.md`
-3. **Read** the relevant GDD chapter in `docs/GDD-Camping-Survivor.md`
-4. Implement **only** what `tasks.md` describes
-5. Run all checks in `verify.md`
-6. **Merge** spec deltas into `openspec/specs/` and **archive** the change to `openspec/changes/archive/`
+1. **Propose** — `/opsx:propose` or ensure change exists under `openspec/changes/<slice-id>/`
+2. **Read** artifacts: `proposal.md` → `design.md` → `specs/` → `tasks.md` → `verify.md`
+3. **Read** capability spec in `openspec/specs/<capability>/spec.md` and relevant GDD chapter
+4. **Apply** — `/opsx:apply` — implement only what `tasks.md` describes; mark `[x]` per task
+5. **Verify** — complete `verify.md`; run `openspec validate <change>`
+6. **Archive** — `/opsx:archive` after user approves
 
 **Rules:**
 
-- **One slice at a time** — do not start slice N+1 until slice N tasks are 100% `[x]` and verified
+- **One slice at a time** — do not start slice N+1 until slice N is archived
 - **No code without spec delta** for new or changed behavior
-- **New feature** = new folder under `openspec/changes/`, not ad-hoc edits
-
-**Standard prompt:** *"Ejecuta slice-XX según openspec/changes/slice-XX-*/. No avances hasta verify.md completo."*
+- Refresh slash commands after OpenSpec upgrades: `openspec update`
 
 ## Architecture (every change)
 

@@ -3,6 +3,11 @@
 export type PlayerProfileTemplate = {
 	currency: number,
 	inventory: {},
+	hotbar: { string? },
+	equipped: {
+		toolItemId: string?,
+		coatItemId: string?,
+	},
 	stats: {
 		level: number,
 		xp: number,
@@ -37,6 +42,11 @@ export type PlayerProfileTemplate = {
 local PlayerProfileTemplate: PlayerProfileTemplate = {
 	currency = 0,
 	inventory = {},
+	hotbar = { nil, nil, nil, nil, nil, nil },
+	equipped = {
+		toolItemId = nil,
+		coatItemId = nil,
+	},
 	stats = {
 		level = 1,
 		xp = 0,

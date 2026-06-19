@@ -9,6 +9,9 @@ local Remotes = {
 		"QuestProgressEvent",
 		"SetLocaleEvent",
 		"LocaleChangedEvent",
+		"EquipItemEvent",
+		"SetHotbarSlotEvent",
+		"UseItemEvent",
 	},
 	Functions = {},
 }

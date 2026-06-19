@@ -69,6 +69,12 @@ local definitions: { [string]: ItemTypes.ItemDefinition } = {
 		category = "raw",
 		maxStack = 30,
 	},
+	stone_axe = {
+		id = "stone_axe",
+		nameKey = "item.stone_axe.name",
+		category = "tool",
+		maxStack = 1,
+	},
 }
 
 local Items: ItemsModule = {}

@@ -1,6 +1,6 @@
 # Foundation — Technical Spec
 
-**Status:** Implemented (slice-01, slice-02b locale)  
+**Status:** Implemented (slice-01, slice-02b locale, slice-03 inventory fields)  
 **GDD:** Infrastructure  
 **Services:** PlayerDataService, NetworkingService, PlayerSyncService, LocalizationService
 
@@ -12,7 +12,7 @@ Shared types, profile schema, remote registry, item/recipe constants, and initia
 
 ### Requirement: Extended player profile schema
 
-The system SHALL persist an extended `PlayerProfile` including survival stats, status effects, camp data, unlocked recipes, monetization purchase tracking, tutorial completion, and extended stats (playTime, deaths).
+The system SHALL persist an extended `PlayerProfile` including survival stats, status effects, camp data, unlocked recipes, monetization purchase tracking, tutorial completion, extended stats (playTime, deaths), hotbar (6 entries), and equipped tool/coat ids.
 
 #### Scenario: New player defaults
 
@@ -23,6 +23,9 @@ The system SHALL persist an extended `PlayerProfile` including survival stats, s
 - AND survival.temperature is 50
 - AND camp.level is 0
 - AND tutorialCompleted is false
+- AND `settings.locale` is `"en"`
+- AND hotbar has 6 empty entries
+- AND equipped.toolItemId and equipped.coatItemId are nil
 
 ### Requirement: Player locale preference (GDD v1.2)
 
@@ -36,7 +39,7 @@ The system SHALL persist `settings.locale` on the player profile with default `"
 
 ### Requirement: Domain sync remotes registry
 
-The system SHALL register RemoteEvents: `SurvivalUpdatedEvent`, `InventoryUpdatedEvent`, `CampUpdatedEvent`, `QuestProgressEvent` under `ReplicatedStorage.Remotes.Events`.
+The system SHALL register RemoteEvents: `SurvivalUpdatedEvent`, `InventoryUpdatedEvent`, `CampUpdatedEvent`, `QuestProgressEvent`, `SetLocaleEvent`, `LocaleChangedEvent`, `EquipItemEvent`, `SetHotbarSlotEvent`, `UseItemEvent` under `ReplicatedStorage.Remotes.Events`.
 
 #### Scenario: Remote instances exist at server start
 
@@ -53,7 +56,7 @@ The system SHALL fire domain sync events to the client after a successful profil
 - GIVEN a player profile loaded successfully
 - WHEN initial sync runs
 - THEN `SurvivalUpdatedEvent` fires with current survival stats and status effects
-- AND `InventoryUpdatedEvent` fires with current inventory
+- AND `InventoryUpdatedEvent` fires with current inventory, hotbar, and equipped
 - AND `CampUpdatedEvent` fires with current camp data
 - AND `QuestProgressEvent` fires with current quest progress
 

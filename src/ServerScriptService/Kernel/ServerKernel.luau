@@ -45,6 +45,20 @@ function ServerKernel.loadServices(): { LoadedService }
 			error(`Service module "{moduleScript.Name}" must export a table with Name`, 2)
 		end
 
+		local alreadyLoaded = false
+
+		for _, existing in loadedServices do
+			if existing.Name == serviceModule.Name then
+				alreadyLoaded = true
+				Logger.warn("ServerKernel", `Skipping duplicate service module: {serviceModule.Name}`)
+				break
+			end
+		end
+
+		if alreadyLoaded then
+			continue
+		end
+
 		table.insert(loadedServices, serviceModule :: LoadedService)
 		Logger.info("ServerKernel", `Loaded service: {serviceModule.Name}`)
 	end

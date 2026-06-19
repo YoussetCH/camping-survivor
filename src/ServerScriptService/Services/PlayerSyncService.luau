@@ -28,6 +28,8 @@ end
 local function buildInventorySnapshot(data: PlayerProfileTypes.PlayerProfile): PlayerProfileTypes.InventorySnapshot
 	return {
 		inventory = data.inventory,
+		hotbar = data.hotbar,
+		equipped = data.equipped,
 	}
 end
 

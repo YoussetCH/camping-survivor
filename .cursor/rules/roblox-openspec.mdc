@@ -1,39 +1,53 @@
 ---
-description: OpenSpec-compatible implementation workflow for Camping Survivor
+description: OpenSpec workflow for Camping Survivor (slash commands + CLI)
 alwaysApply: true
 ---
 
-# OpenSpec-compatible workflow
+# OpenSpec workflow (required)
+
+Use the **official OpenSpec slash commands** in Cursor. Do not implement gameplay without an active change.
+
+## Slash commands (primary)
+
+| Command | When |
+|---------|------|
+| `/opsx:propose <idea>` | New slice or feature — creates change + all artifacts |
+| `/opsx:apply` | Implement `tasks.md` for the active change |
+| `/opsx:archive` | After verify + user approval — merge specs and archive |
+| `/opsx:explore` | Optional — investigate before proposing |
+
+Default schema: **`roblox-slice`** (set in `openspec/config.yaml`).
 
 ## Before writing code
 
-1. Read `openspec/config.yaml` for active slice
-2. Read all files in `openspec/changes/<active-slice>/`
-3. Read `openspec/specs/<capability>/spec.md` for affected capabilities
-4. Read relevant section of `docs/GDD-Camping-Survivor.md`
+1. Confirm active change: `openspec list` or `openspec/config.yaml` → `workflow.active_change`
+2. Run `openspec status --change <name>` — all artifacts must be done before apply
+3. For apply: `openspec instructions apply --change <name> --json` then read `contextFiles`
+4. Read capability specs in `openspec/specs/` and relevant GDD chapter
 
-## During implementation
+## During implementation (`/opsx:apply`)
 
-- Follow `tasks.md` in order; mark `[x]` when done
-- Register new remotes in `src/ReplicatedStorage/Shared/Constants/Remotes.luau`
-- Extend `PlayerProfile` only with typed fields + template reconcile
-- Services hold business logic; Controllers handle UI/input only
-- Repositories are the only ProfileStore access
-- Player-visible strings use localization keys (`roblox-i18n.mdc`); default locale `en`
+- Follow `tasks.md` in order; mark `- [x]` immediately after each task
+- Register remotes in `Remotes.luau` + Rojo RemoteEvent instances
+- Services = business logic; Controllers = UI/input only; Repositories = ProfileStore only
+- Player-visible strings = localization keys (`roblox-i18n.mdc`); default `en`
 
 ## After implementation
 
-- Satisfy every item in `verify.md`
-- Merge ADDED/MODIFIED requirements into `openspec/specs/`
-- Move change folder to `openspec/changes/archive/YYYY-MM-DD-<slice-id>/`
-- Update `openspec/config.yaml` `workflow.active_change` to next slice
+- Complete every item in `verify.md`
+- `openspec validate <change-name>`
+- User approves → `/opsx:archive` (or `openspec archive <name> -y`)
+- Update `workflow.active_change` to next slice in Implementation-Plan
 
-## Extending or modifying features
+## CLI reference
 
-| Action | Process |
-|--------|---------|
-| New feature | New `openspec/changes/<name>/` with ADDED delta |
-| Change behavior | Change folder with MODIFIED delta (before/after) |
-| Bug fix | Small change folder or patch delta if spec was wrong |
+```bash
+openspec new change <name>              # uses schema from config.yaml
+openspec status --change <name> --json
+openspec instructions apply --change <name> --json
+openspec validate <name>
+openspec archive <name> -y
+openspec update                         # refresh Cursor slash commands
+```
 
-Never implement gameplay without an spec delta in the change folder.
+Never implement gameplay without a spec delta in the change folder.

@@ -17,6 +17,7 @@ export type PlayerDataRepository = {
 	LoadProfile: (self: PlayerDataRepository, player: Player) -> ProfileSession?,
 	GetProfile: (self: PlayerDataRepository, player: Player) -> ProfileSession?,
 	GetData: (self: PlayerDataRepository, player: Player) -> PlayerProfileTypes.PlayerProfile?,
+	SaveProfile: (self: PlayerDataRepository, player: Player) -> boolean,
 	ReleaseProfile: (self: PlayerDataRepository, player: Player) -> (),
 	ReleaseAll: (self: PlayerDataRepository) -> (),
 }
@@ -86,6 +87,17 @@ function PlayerDataRepository:GetData(player: Player): PlayerProfileTypes.Player
 	end
 
 	return profile.Data :: PlayerProfileTypes.PlayerProfile
+end
+
+function PlayerDataRepository:SaveProfile(player: Player): boolean
+	local profile = self._profiles[player]
+
+	if profile == nil or profile:IsActive() ~= true then
+		return false
+	end
+
+	profile:Save()
+	return true
 end
 
 function PlayerDataRepository:ReleaseProfile(player: Player)

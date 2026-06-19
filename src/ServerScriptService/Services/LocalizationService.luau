@@ -32,6 +32,7 @@ local function onSetLocale(player: Player, locale: unknown)
 
 	ensureSettingsLocale(data)
 	data.settings.locale = locale :: LocaleTypes.LocaleCode
+	PlayerDataService:SaveProfile(player)
 	Networking.getEvent("LocaleChangedEvent"):FireClient(player, locale)
 	Logger.info("LocalizationService", `{player.Name} locale set to {locale}`)
 end

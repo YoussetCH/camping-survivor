@@ -6,6 +6,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local BaseService = require(ServerScriptService.Kernel.BaseService)
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
+local InventoryService = require(ServerScriptService.Services.InventoryService)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 local PlayerSyncService = require(ServerScriptService.Services.PlayerSyncService)
 local SurvivalConstants = require(ReplicatedStorage.Shared.Constants.SurvivalConstants)
@@ -92,40 +93,6 @@ local function computeHpRegenPerMinute(data: PlayerProfileTypes.PlayerProfile): 
 	return 0
 end
 
-local function applyDeathInventoryPenalty(inventory: { PlayerProfileTypes.InventoryItem }): { PlayerProfileTypes.InventoryItem }
-	if #inventory == 0 then
-		return inventory
-	end
-
-	local slotsToRemove = math.ceil(#inventory * SurvivalConstants.DEATH_INVENTORY_LOSS_FRACTION)
-	local indices: { number } = {}
-
-	for index = 1, #inventory do
-		table.insert(indices, index)
-	end
-
-	for index = #indices, 2, -1 do
-		local swapIndex = math.random(1, index)
-		indices[index], indices[swapIndex] = indices[swapIndex], indices[index]
-	end
-
-	local removeSet: { [number]: boolean } = {}
-
-	for index = 1, slotsToRemove do
-		removeSet[indices[index]] = true
-	end
-
-	local remaining: { PlayerProfileTypes.InventoryItem } = {}
-
-	for index, item in inventory do
-		if not removeSet[index] then
-			table.insert(remaining, item)
-		end
-	end
-
-	return remaining
-end
-
 local function teleportToSpawn(player: Player)
 	local character = player.Character
 
@@ -142,8 +109,9 @@ end
 
 local function handleDeath(player: Player, data: PlayerProfileTypes.PlayerProfile)
 	if data.tutorialCompleted then
-		data.inventory = applyDeathInventoryPenalty(data.inventory)
+		InventoryService.applyDeathPenalty(player, data)
 		PlayerSyncService.syncInventoryToClient(player, data)
+		PlayerDataService:SaveProfile(player)
 	end
 
 	table.clear(data.statusEffects)
@@ -155,6 +123,7 @@ local function handleDeath(player: Player, data: PlayerProfileTypes.PlayerProfil
 	data.stats.deaths += 1
 
 	PlayerSyncService.syncSurvivalToClient(player, data)
+	PlayerDataService:SaveProfile(player)
 	player:LoadCharacter()
 	teleportToSpawn(player)
 	Logger.info("SurvivalService", `{player.Name} died and respawned (deaths: {data.stats.deaths})`)

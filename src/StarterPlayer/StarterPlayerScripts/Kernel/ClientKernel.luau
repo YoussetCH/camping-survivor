@@ -17,6 +17,7 @@ local ClientKernel = {}
 local INIT_ORDER = {
 	"LocalizationController",
 	"SurvivalHUDController",
+	"InventoryHUDController",
 	"UIController",
 	"ClientSyncController",
 }
@@ -67,6 +68,20 @@ function ClientKernel.loadControllers(): { LoadedController }
 
 		if type(controllerModule) ~= "table" or type(controllerModule.Name) ~= "string" then
 			Logger.error("ClientKernel", `Controller module "{moduleScript.Name}" must export a table with Name`)
+			continue
+		end
+
+		local alreadyLoaded = false
+
+		for _, existing in loadedControllers do
+			if existing.Name == controllerModule.Name then
+				alreadyLoaded = true
+				Logger.warn("ClientKernel", `Skipping duplicate controller module: {controllerModule.Name}`)
+				break
+			end
+		end
+
+		if alreadyLoaded then
 			continue
 		end
 

@@ -1,11 +1,13 @@
 --!strict
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local PlayerDataServiceModule = require(ServerScriptService.Services.PlayerDataService)
 local ServerKernel = require(ServerScriptService.Kernel.ServerKernel)
+local ProfileStore = require(ServerScriptService.Packages.ProfileStore)
 
 local function ensureDevWorld()
 	if workspace:FindFirstChild("DevBaseplate") == nil then
@@ -37,12 +39,39 @@ local function ensureDevWorld()
 	end
 end
 
+local function configurePersistence()
+	if not RunService:IsStudio() then
+		return
+	end
+
+	task.spawn(function()
+		local timeoutAt = os.clock() + 10
+
+		while ProfileStore.DataStoreState == "NotReady" and os.clock() < timeoutAt do
+			task.wait(0.1)
+		end
+
+		if ProfileStore.DataStoreState == "Access" then
+			ProfileStore.SetConstant("AUTO_SAVE_PERIOD", 60)
+			Logger.info("Bootstrap", "Studio API Services enabled — profile data will persist between Play sessions")
+			return
+		end
+
+		Logger.warn(
+			"Bootstrap",
+			"Studio API Services disabled — locale/inventory will NOT persist between Play sessions. "
+				.. "Enable in Home > Game Settings > Security > 'Enable Studio Access to API Services', then restart Studio."
+		)
+	end)
+end
+
 ensureDevWorld()
 
 local services = ServerKernel.loadServices()
 
 ServerKernel.initServices(services)
 ServerKernel.startServices(services)
+configurePersistence()
 
 local function onBindToClose()
 	Logger.info("Bootstrap", "BindToClose triggered, releasing player profiles")

@@ -89,4 +89,21 @@ Accede desde cualquier lado con `Shared/Networking/Networking.luau`.
 
 - Solo el servidor guarda datos
 - `PlayerDataRepository` usa ProfileStore con session locking
-- Autosave + `PlayerRemoving` + `BindToClose`
+- Cambios de locale/inventario llaman `profile:Save()` al instante
+- Autosave cada 60s en Studio (300s en servidores publicados) + `PlayerRemoving` + `BindToClose`
+
+### Studio: guardar progreso entre Play
+
+Si al dar Play ves en Output:
+
+`[profilestore]: Roblox API services unavailable - data will not be saved`
+
+**no se guardará nada** entre sesiones de Play (idioma, inventario, equip).
+
+Actívalo así:
+
+1. En Studio: **Home → Game Settings → Security**
+2. Activa **Enable Studio Access to API Services**
+3. Cierra y reabre Studio, vuelve a dar Play
+
+Deberías ver: `[profilestore]: Roblox API services available - data will be saved`

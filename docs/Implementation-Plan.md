@@ -1,21 +1,44 @@
 # Camping Survivor — Plan de implementación
 
-> **Metodología:** OpenSpec-compatible (sin CLI obligatorio)  
+> **Metodología:** [OpenSpec](https://github.com/Fission-AI/OpenSpec) — schema `roblox-slice`  
 > **Product spec:** [GDD-Camping-Survivor.md](./GDD-Camping-Survivor.md) v1.2  
 > **Idiomas:** English (default) · Español — extensible ([§1.11](./GDD-Camping-Survivor.md#111-localización-e-idiomas))
 > **Specs técnicas:** [`openspec/specs/`](../openspec/specs/)  
-> **Slice activo:** Próximo — `slice-03-inventory`  
-> **Último completado:** [`archive/2026-06-19-slice-02b-localization`](../openspec/changes/archive/2026-06-19-slice-02b-localization/)
+> **Slice activo:** Próximo — `slice-04-crafting`  
+> **Último completado:** [`archive/2026-06-19-slice-03-inventory`](../openspec/changes/archive/2026-06-19-slice-03-inventory/)
 
-## Workflow IA
+## Workflow OpenSpec (Cursor)
 
-1. Leer `openspec/changes/<slice>/` (proposal → design → specs → tasks → verify)
-2. Implementar tasks en orden; marcar `[x]` en `tasks.md`
-3. Ejecutar `verify.md`
-4. Merge delta → `openspec/specs/`; archivar change en `openspec/changes/archive/`
-5. Siguiente slice solo tras aprobación del usuario
+Flujo oficial — usar **slash commands** en el chat de Cursor:
 
-**Prompt estándar:** *"Ejecuta slice-XX según openspec/changes/slice-XX-*/. No avances hasta verify.md completo."*
+```
+/opsx:propose slice-04-crafting     → proposal, specs, design, tasks, verify
+/opsx:apply                         → implementa tasks.md del change activo
+/opsx:archive                       → merge specs + archiva (tras verify + tu OK)
+```
+
+| Paso | Acción |
+|------|--------|
+| 1 | `/opsx:propose "<qué quieres>"` — crea `openspec/changes/<name>/` |
+| 2 | Revisar artefactos; `openspec validate <name>` |
+| 3 | `/opsx:apply` — código según tasks; marcar `[x]` |
+| 4 | Completar `verify.md` en Studio |
+| 5 | `/opsx:archive` — mueve a `openspec/changes/archive/YYYY-MM-DD-<name>/` |
+| 6 | Actualizar `workflow.active_change` en `openspec/config.yaml` |
+
+**CLI de apoyo** (mismo flujo):
+
+```bash
+openspec status --change <name> --json
+openspec instructions apply --change <name> --json
+openspec validate <name>
+openspec archive <name> -y
+openspec update    # refrescar comandos /opsx:* en Cursor
+```
+
+**Change activo:** ninguno — crear con `/opsx:propose slice-04-crafting`
+
+**Siguiente slice planificado:** `slice-04-crafting`
 
 ## Localización (cross-cutting, GDD v1.2)
 
@@ -34,8 +57,8 @@
 | 01 | `slice-01-foundation` | foundation | Infra | Completado |
 | 02 | `slice-02-survival` | survival | Cap. 3 | Completado |
 | 02b | `slice-02b-localization` | localization | §1.11 | Completado |
-| 03 | `slice-03-inventory` | inventory | Cap. 4 | Próximo |
-| 04 | `slice-04-crafting` | crafting | Cap. 4 | Pendiente |
+| 03 | `slice-03-inventory` | inventory | Cap. 4 | Completado |
+| 04 | `slice-04-crafting` | crafting | Cap. 4 | **Próximo** |
 | 05 | `slice-05-camp` | camp | Cap. 6 | Pendiente |
 | 06 | `slice-06-world` | world | Cap. 5 | Pendiente |
 | 07 | `slice-07-fauna` | survival + world | Cap. 3/5 | Pendiente |

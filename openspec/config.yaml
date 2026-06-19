@@ -1,5 +1,36 @@
-# OpenSpec-compatible config — Camping Survivor
-# Context for AI agents (Cursor). No CLI required.
+# OpenSpec — Camping Survivor
+# Default workflow schema for all new changes (see openspec/schemas/roblox-slice/)
+
+schema: roblox-slice
+
+context: |
+  Project: Camping Survivor — Roblox survival game (Luau, Rojo, Wally, ProfileStore).
+  Product spec: docs/GDD-Camping-Survivor.md v1.2
+  Implementation index: docs/Implementation-Plan.md
+  Architecture: Services (server) + Controllers (client) + Repositories (persistence only).
+  Default locale: en. Launch locales: en, es. All player-visible text uses Localization keys.
+  Remotes registry: src/ReplicatedStorage/Shared/Constants/Remotes.luau
+  One vertical slice at a time. Active change path in workflow.active_change below.
+  Cursor rules: .cursor/rules/roblox-*.mdc (always apply).
+
+rules:
+  proposal:
+    - Map each slice to GDD chapter and openspec/specs capability
+    - Include explicit out-of-scope section
+    - Name changes slice-XX-<capability> when part of Implementation-Plan
+  design:
+    - List services, controllers, remotes, types, and security validations
+    - UI must be passive; business logic only in services
+  specs:
+    - Use ADDED/MODIFIED/REMOVED deltas; scenarios with #### Scenario headers
+    - Use SHALL/MUST for requirements
+  tasks:
+    - Checkbox format - [ ] only; group under ## numbered headings
+    - Include verify step and archive step as final tasks
+  verify:
+    - Include rojo build, Studio manual checks, and regression from prior slices
+
+# --- Project metadata (OpenSpec CLI ignores; used by humans and Camping Survivor tooling) ---
 
 project:
   name: camping-survivor
@@ -25,7 +56,7 @@ stack:
   persistence: ProfileStore
   architecture: Services + Controllers + Repositories
 
-rules:
+cursor_rules:
   - .cursor/rules/roblox-core.mdc
   - .cursor/rules/roblox-architecture.mdc
   - .cursor/rules/roblox-networking.mdc
@@ -85,7 +116,7 @@ conventions:
   locale_tables: src/ReplicatedStorage/Shared/Localization/Locales/
 
 workflow:
-  active_change: openspec/changes/slice-03-inventory
+  active_change: openspec/changes/slice-04-crafting
   one_slice_at_a_time: true
   archive_path: openspec/changes/archive
-  schema: openspec/schemas/roblox-slice.yaml
+  schema_path: openspec/schemas/roblox-slice/schema.yaml
