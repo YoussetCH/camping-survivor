@@ -19,20 +19,20 @@ function Networking.getFunctionsFolder(): Folder
 end
 
 function Networking.getEvent(name: string): RemoteEvent
-	local remote = eventsFolder:FindFirstChild(name)
+	local remote = eventsFolder:WaitForChild(name, 30)
 
 	if remote == nil then
-		error(`RemoteEvent "{name}" was not found`, 2)
+		error(`RemoteEvent "{name}" was not found after 30s`, 2)
 	end
 
 	return remote :: RemoteEvent
 end
 
 function Networking.getFunction(name: string): RemoteFunction
-	local remote = functionsFolder:FindFirstChild(name)
+	local remote = functionsFolder:WaitForChild(name, 30)
 
 	if remote == nil then
-		error(`RemoteFunction "{name}" was not found`, 2)
+		error(`RemoteFunction "{name}" was not found after 30s`, 2)
 	end
 
 	return remote :: RemoteFunction

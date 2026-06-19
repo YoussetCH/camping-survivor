@@ -4,7 +4,7 @@ export type ItemCategory = "raw" | "processed" | "tool" | "medicine" | "food" | 
 
 export type ItemDefinition = {
 	id: string,
-	displayName: string,
+	nameKey: string,
 	category: ItemCategory,
 	maxStack: number,
 }

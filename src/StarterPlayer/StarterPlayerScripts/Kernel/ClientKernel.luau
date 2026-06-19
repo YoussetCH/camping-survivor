@@ -14,9 +14,26 @@ export type LoadedController = {
 
 local ClientKernel = {}
 
+local INIT_ORDER = {
+	"LocalizationController",
+	"SurvivalHUDController",
+	"UIController",
+	"ClientSyncController",
+}
+
 local loadedControllers: { LoadedController } = {}
 local started = false
 local playerScripts = Players.LocalPlayer:WaitForChild("PlayerScripts") :: PlayerScripts
+
+local function getInitPriority(controllerName: string): number
+	for index, name in INIT_ORDER do
+		if name == controllerName then
+			return index
+		end
+	end
+
+	return #INIT_ORDER + 1
+end
 
 local function getControllerModules(): { ModuleScript }
 	local controllersFolder = playerScripts:WaitForChild("Controllers") :: Folder
@@ -41,10 +58,16 @@ function ClientKernel.loadControllers(): { LoadedController }
 	end
 
 	for _, moduleScript in getControllerModules() do
-		local controllerModule = require(moduleScript)
+		local loadOk, controllerModule = pcall(require, moduleScript)
+
+		if not loadOk then
+			Logger.error("ClientKernel", `Failed to load controller "{moduleScript.Name}": {controllerModule}`)
+			continue
+		end
 
 		if type(controllerModule) ~= "table" or type(controllerModule.Name) ~= "string" then
-			error(`Controller module "{moduleScript.Name}" must export a table with Name`, 2)
+			Logger.error("ClientKernel", `Controller module "{moduleScript.Name}" must export a table with Name`)
+			continue
 		end
 
 		table.insert(loadedControllers, controllerModule :: LoadedController)
@@ -55,9 +78,29 @@ function ClientKernel.loadControllers(): { LoadedController }
 end
 
 function ClientKernel.initControllers(controllers: { LoadedController })
-	for _, controller in controllers do
-		controller:Init()
-		Logger.info("ClientKernel", `Initialized controller: {controller.Name}`)
+	local orderedControllers = table.clone(controllers)
+
+	table.sort(orderedControllers, function(left, right)
+		local leftPriority = getInitPriority(left.Name)
+		local rightPriority = getInitPriority(right.Name)
+
+		if leftPriority ~= rightPriority then
+			return leftPriority < rightPriority
+		end
+
+		return left.Name < right.Name
+	end)
+
+	for _, controller in orderedControllers do
+		local initOk, initError = pcall(function()
+			controller:Init()
+		end)
+
+		if initOk then
+			Logger.info("ClientKernel", `Initialized controller: {controller.Name}`)
+		else
+			Logger.error("ClientKernel", `Failed to init controller "{controller.Name}": {initError}`)
+		end
 	end
 end
 

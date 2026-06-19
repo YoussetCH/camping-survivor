@@ -52,10 +52,44 @@ function ServerKernel.loadServices(): { LoadedService }
 	return loadedServices
 end
 
+local INIT_ORDER = {
+	"NetworkingService",
+}
+
+local function getInitPriority(serviceName: string): number
+	for index, name in INIT_ORDER do
+		if name == serviceName then
+			return index
+		end
+	end
+
+	return #INIT_ORDER + 1
+end
+
 function ServerKernel.initServices(services: { LoadedService })
-	for _, service in services do
-		service:Init()
-		Logger.info("ServerKernel", `Initialized service: {service.Name}`)
+	local orderedServices = table.clone(services)
+
+	table.sort(orderedServices, function(left, right)
+		local leftPriority = getInitPriority(left.Name)
+		local rightPriority = getInitPriority(right.Name)
+
+		if leftPriority ~= rightPriority then
+			return leftPriority < rightPriority
+		end
+
+		return left.Name < right.Name
+	end)
+
+	for _, service in orderedServices do
+		local initOk, initError = pcall(function()
+			service:Init()
+		end)
+
+		if initOk then
+			Logger.info("ServerKernel", `Initialized service: {service.Name}`)
+		else
+			Logger.error("ServerKernel", `Failed to init service "{service.Name}": {initError}`)
+		end
 	end
 end
 

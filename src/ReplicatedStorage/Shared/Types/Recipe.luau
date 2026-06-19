@@ -4,7 +4,7 @@ export type RecipeUnlockType = "tutorial" | "starter" | "clue" | "mission" | "ex
 
 export type RecipeDefinition = {
 	id: string,
-	displayName: string,
+	nameKey: string,
 	unlockType: RecipeUnlockType,
 	station: string,
 	inputs: { { itemId: string, quantity: number } },

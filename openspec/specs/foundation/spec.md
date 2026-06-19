@@ -1,8 +1,8 @@
 # Foundation — Technical Spec
 
-**Status:** Implemented (slice-01)  
+**Status:** Implemented (slice-01, slice-02b locale)  
 **GDD:** Infrastructure  
-**Services:** PlayerDataService, NetworkingService, PlayerSyncService
+**Services:** PlayerDataService, NetworkingService, PlayerSyncService, LocalizationService
 
 ## Purpose
 
@@ -23,6 +23,16 @@ The system SHALL persist an extended `PlayerProfile` including survival stats, s
 - AND survival.temperature is 50
 - AND camp.level is 0
 - AND tutorialCompleted is false
+
+### Requirement: Player locale preference (GDD v1.2)
+
+The system SHALL persist `settings.locale` on the player profile with default `"en"`. Launch locales: `"en"`, `"es"`.
+
+#### Scenario: New player locale default
+
+- GIVEN a player joins for the first time
+- WHEN the profile is reconciled from template
+- THEN `settings.locale` is `"en"`
 
 ### Requirement: Domain sync remotes registry
 

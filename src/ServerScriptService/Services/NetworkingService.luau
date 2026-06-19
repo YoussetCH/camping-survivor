@@ -1,8 +1,9 @@
 --!strict
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 
-local BaseService = require(script.Parent.BaseService)
+local BaseService = require(ServerScriptService.Kernel.BaseService)
 local RemoteNames = require(ReplicatedStorage.Shared.Constants.Remotes)
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 
@@ -36,10 +37,26 @@ local function ensureRemoteFunction(parent: Folder, name: string): RemoteFunctio
 	return remote
 end
 
+local function dedupeRemoteEvents(folder: Folder)
+	local seen: { [string]: boolean } = {}
+
+	for _, child in folder:GetChildren() do
+		if child:IsA("RemoteEvent") then
+			if seen[child.Name] then
+				child:Destroy()
+			else
+				seen[child.Name] = true
+			end
+		end
+	end
+end
+
 function NetworkingService:Init()
 	local remotesFolder = ReplicatedStorage:WaitForChild("Remotes") :: Folder
 	local eventsFolder = remotesFolder:WaitForChild("Events") :: Folder
 	local functionsFolder = remotesFolder:WaitForChild("Functions") :: Folder
+
+	dedupeRemoteEvents(eventsFolder)
 
 	for _, eventName in RemoteNames.Events do
 		ensureRemoteEvent(eventsFolder, eventName)

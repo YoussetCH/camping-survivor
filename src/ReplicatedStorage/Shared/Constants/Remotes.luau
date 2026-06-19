@@ -7,6 +7,8 @@ local Remotes = {
 		"InventoryUpdatedEvent",
 		"CampUpdatedEvent",
 		"QuestProgressEvent",
+		"SetLocaleEvent",
+		"LocaleChangedEvent",
 	},
 	Functions = {},
 }

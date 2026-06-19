@@ -45,6 +45,20 @@
           "$path": "src/StarterPlayer/StarterPlayerScripts/Controllers"
         }
       }
+    },
+
+    "Workspace": {
+      "$path": "src/Workspace"
+    },
+
+    "Lighting": {
+      "$properties": {
+        "Ambient": [0.45, 0.45, 0.45],
+        "Brightness": 2,
+        "GlobalShadows": true,
+        "Outlines": false,
+        "ClockTime": 14
+      }
     }
   }
 }

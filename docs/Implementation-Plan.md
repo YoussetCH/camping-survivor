@@ -1,10 +1,11 @@
 # Camping Survivor — Plan de implementación
 
 > **Metodología:** OpenSpec-compatible (sin CLI obligatorio)  
-> **Product spec:** [GDD-Camping-Survivor.md](./GDD-Camping-Survivor.md) v1.1  
+> **Product spec:** [GDD-Camping-Survivor.md](./GDD-Camping-Survivor.md) v1.2  
+> **Idiomas:** English (default) · Español — extensible ([§1.11](./GDD-Camping-Survivor.md#111-localización-e-idiomas))
 > **Specs técnicas:** [`openspec/specs/`](../openspec/specs/)  
-> **Slice activo:** Próximo — `slice-02-survival` (crear change folder al iniciar)  
-> **Último completado:** [`archive/2026-06-19-slice-01-foundation`](../openspec/changes/archive/2026-06-19-slice-01-foundation/)
+> **Slice activo:** Próximo — `slice-03-inventory`  
+> **Último completado:** [`archive/2026-06-19-slice-02b-localization`](../openspec/changes/archive/2026-06-19-slice-02b-localization/)
 
 ## Workflow IA
 
@@ -16,13 +17,24 @@
 
 **Prompt estándar:** *"Ejecuta slice-XX según openspec/changes/slice-XX-*/. No avances hasta verify.md completo."*
 
+## Localización (cross-cutting, GDD v1.2)
+
+| | |
+|--|--|
+| **Default** | `en` (English) |
+| **Launch** | `en`, `es` |
+| **Spec** | [openspec/specs/localization/spec.md](../openspec/specs/localization/spec.md) |
+| **Implementación** | Slice dedicado **antes de slice-03** (recomendado) o primer bloque de slice-03 |
+| **Regla** | Desde ahora: textos visibles = claves i18n, no strings hardcodeados en controllers |
+
 ## Vertical slices
 
 | # | ID | Capability | GDD | Estado |
 |---|-----|------------|-----|--------|
 | 01 | `slice-01-foundation` | foundation | Infra | Completado |
-| 02 | `slice-02-survival` | survival | Cap. 3 | Próximo |
-| 03 | `slice-03-inventory` | inventory | Cap. 4 | Pendiente |
+| 02 | `slice-02-survival` | survival | Cap. 3 | Completado |
+| 02b | `slice-02b-localization` | localization | §1.11 | Completado |
+| 03 | `slice-03-inventory` | inventory | Cap. 4 | Próximo |
 | 04 | `slice-04-crafting` | crafting | Cap. 4 | Pendiente |
 | 05 | `slice-05-camp` | camp | Cap. 6 | Pendiente |
 | 06 | `slice-06-world` | world | Cap. 5 | Pendiente |
@@ -61,6 +73,7 @@
 | [multiplayer](../openspec/specs/multiplayer/spec.md) | ClanService, TradeService, RaidService |
 | [economy](../openspec/specs/economy/spec.md) | EconomyService, MonetizationService |
 | [ui](../openspec/specs/ui/spec.md) | Controllers |
+| [localization](../openspec/specs/localization/spec.md) | LocalizationService, LocalizationController |
 
 ## Extender features
 

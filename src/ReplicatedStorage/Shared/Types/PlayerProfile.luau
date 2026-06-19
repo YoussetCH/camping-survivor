@@ -1,6 +1,7 @@
 --!strict
 
 local CampTypes = require(script.Parent.Camp)
+local PlayerSettingsTypes = require(script.Parent.PlayerSettings)
 local SurvivalTypes = require(script.Parent.Survival)
 
 export type InventoryItem = {
@@ -26,7 +27,7 @@ export type PlayerProfile = {
 	inventory: { InventoryItem },
 	stats: PlayerStats,
 	quests: { [string]: unknown },
-	settings: { [string]: unknown },
+	settings: PlayerSettingsTypes.PlayerSettings,
 	survival: SurvivalTypes.SurvivalStats,
 	statusEffects: { SurvivalTypes.StatusEffect },
 	camp: CampTypes.CampData,

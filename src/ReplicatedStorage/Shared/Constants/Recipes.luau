@@ -10,7 +10,7 @@ export type RecipesModule = {
 local definitions: { [string]: RecipeTypes.RecipeDefinition } = {
 	recipe_sparks = {
 		id = "recipe_sparks",
-		displayName = "Chispas",
+		nameKey = "recipe.recipe_sparks.name",
 		unlockType = "tutorial",
 		station = "hands",
 		inputs = {
@@ -23,7 +23,7 @@ local definitions: { [string]: RecipeTypes.RecipeDefinition } = {
 	},
 	recipe_tinder = {
 		id = "recipe_tinder",
-		displayName = "Yesca",
+		nameKey = "recipe.recipe_tinder.name",
 		unlockType = "tutorial",
 		station = "hands",
 		inputs = {
@@ -36,7 +36,7 @@ local definitions: { [string]: RecipeTypes.RecipeDefinition } = {
 	},
 	recipe_bandage = {
 		id = "recipe_bandage",
-		displayName = "Vendaje",
+		nameKey = "recipe.recipe_bandage.name",
 		unlockType = "tutorial",
 		station = "hands",
 		inputs = {
@@ -49,7 +49,7 @@ local definitions: { [string]: RecipeTypes.RecipeDefinition } = {
 	},
 	recipe_campfire = {
 		id = "recipe_campfire",
-		displayName = "Fogata",
+		nameKey = "recipe.recipe_campfire.name",
 		unlockType = "tutorial",
 		station = "hands",
 		inputs = {

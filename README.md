@@ -2,6 +2,8 @@
 
 Proyecto Roblox con **Rojo + Wally**, arquitectura **Services + Controllers** propia (sin Knit), **Trove** para lifecycle y **ProfileStore** para persistencia.
 
+**Idiomas del juego:** English (default) · Español — extensible. Ver GDD §1.11 y `openspec/specs/localization/spec.md`.
+
 ## Requisitos
 
 - [Aftman](https://github.com/LPGhatguy/aftman) (o instala `rojo` y `wally` manualmente)

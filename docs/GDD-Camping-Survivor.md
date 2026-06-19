@@ -1,15 +1,16 @@
 # Camping Survivor — Game Design Document
 
-> **Versión:** 1.1 (GDD completo)  
-> **Estado:** Cap. 1–9 aprobados · Cap. 10 en revisión
-> **Idioma:** Español  
+> **Versión:** 1.2  
+> **Estado:** GDD completo · v1.2 añade localización (§1.11, §10.22)  
+> **Idioma del documento:** Español *(texto de diseño; el juego usa EN/ES — ver §1.11)*  
+> **Idiomas del juego (v1.0):** Inglés (por defecto) · Español  
 > **Plataforma:** Roblox (PC + móvil)
 
 ---
 
 ## Índice
 
-1. [Visión y pilares](#1-visión-y-pilares) — incluye [§1.10 Monetización](#110-monetización--filosofía-y-límites)
+1. [Visión y pilares](#1-visión-y-pilares) — incluye [§1.10 Monetización](#110-monetización--filosofía-y-límites) · [§1.11 Localización](#111-localización-e-idiomas)
 2. [Core loop y sesión de juego](#2-core-loop-y-sesión-de-juego)
 3. [Supervivencia](#3-supervivencia)
 4. [Crafting e inventario](#4-crafting-e-inventario)
@@ -135,6 +136,7 @@ Estas decisiones ya están tomadas y no cambian salvo revisión explícita:
 | Monetización | Cosméticos + conveniencia + boosts temporales acotados; no pay-to-win |
 | Plataforma | PC + móvil desde el inicio |
 | Ayudantes | Encontrables en el mundo; 1 especialidad cada uno; requieren comida/cura/protección; muerte permanente |
+| **Idiomas del juego** | **Inglés (por defecto) + Español**; arquitectura extensible a más idiomas (§1.11) |
 
 ### 1.9 Ayudantes del campamento — Resumen de sistema
 
@@ -209,6 +211,70 @@ Un jugador que **paga ocasionalmente** obtiene:
 - Una red de seguridad ante raid (escudo temporal acotado).
 
 **Regla de diseño:** ningún boost temporal debe reducir el tiempo para completar un hito principal (ej. campamento nv. 3) en más de **~15–20%** frente a un jugador F2P competente.
+
+### 1.11 Localización e idiomas
+
+El juego es **multilingüe desde el diseño**. Toda cadena visible al jugador (UI, items, misiones, diálogos, toasts, tienda) pasa por un sistema de localización centralizado — no se hardcodean textos finales en controllers ni ScreenGui.
+
+#### Idiomas v1.0
+
+| Código | Idioma | Rol |
+|--------|--------|-----|
+| **`en`** | English | **Idioma por defecto** (fallback global) |
+| **`es`** | Español | Lanzamiento day-one |
+
+#### Principios
+
+| Principio | Regla |
+|-----------|-------|
+| **Default** | Primer acceso y jugadores sin preferencia guardada → **`en`** |
+| **Extensible** | Añadir `pt`, `fr`, etc. = nuevo archivo de locale + registro; sin refactor de UI |
+| **Fallback** | Clave ausente en locale activo → **`en`** → en Studio/dev mostrar clave entre corchetes |
+| **GDD vs juego** | Este GDD está en español (autoría interna); los textos in-game viven en **tablas de traducción**, no en el GDD |
+| **Persistencia** | Preferencia en `PlayerProfile.settings.locale` (`"en"` \| `"es"`) |
+| **Detección opcional** | Puede sugerir idioma inicial con `LocalizationService:GetCountryRegionForPlayerAsync` / locale del cliente, pero **nunca** fuerza sin confirmación en tutorial o ajustes |
+| **Servidor autoritativo** | El servidor valida `locale` en peticiones (whitelist); el cliente solo **muestra** traducciones |
+
+#### Qué se localiza
+
+| Categoría | Ejemplos | Clave sugerida |
+|-----------|----------|----------------|
+| UI / HUD | Barras, menús, botones | `ui.hud.hunger`, `ui.menu.settings` |
+| Alertas | "¡Hambre!", toasts raid | `alert.hunger`, `toast.raid.incoming` |
+| Items | Nombre y descripción | `item.stick.name`, `item.stick.desc` |
+| Recetas | Nombre craft | `recipe.sparks.name` |
+| Misiones | Título, objetivo, recompensa | `quest.t01.title` |
+| Diálogos NPC | Líneas tutorial / ermitaño | `dialogue.hermit.intro_01` |
+| Tienda / monetización | Nombres producto (Roblox traduce descripción DP en parte) | `shop.pass.extra_chest` |
+
+#### Qué NO se localiza en tablas (datos, no copy)
+
+- IDs de items, recetas, misiones (`stick`, `recipe_sparks`, `t01_gather`)
+- Números de balance, daño, stacks
+- Payloads de red (snapshots con IDs; el cliente resuelve texto)
+
+#### Selector de idioma (UX)
+
+| Ubicación | Comportamiento |
+|-----------|----------------|
+| **Tutorial** (opcional paso 0) | "Choose your language / Elige tu idioma" — `en` preseleccionado |
+| **Ajustes** | Dropdown o lista: English · Español; cambio instantáneo en UI |
+| **Rejoin** | Aplica `settings.locale` guardado |
+
+#### Formato de cadenas
+
+- Placeholders nombrados: `"You lost {percent}% inventory"` → `ui.death.inventory_loss`
+- Pluralización: claves separadas o función `format(key, { count = n })` según idioma
+- Longitud máxima recomendada en móvil: títulos ≤24 caracteres; botones ≤16
+
+#### Roadmap de idiomas (post v1.0)
+
+| Fase | Idiomas candidatos |
+|------|-------------------|
+| v1.0 | `en`, `es` |
+| v1.x | `pt-BR`, `fr` (según métricas de audiencia Roblox) |
+
+*(Implementación técnica: §10.22, `openspec/specs/localization/spec.md`.)*
 
 ---
 
@@ -2549,6 +2615,7 @@ flowchart LR
 | `ShopController` | Tienda Brasas + Robux |
 | `DialogueController` | NPCs, tutorial prompts |
 | `NotificationController` | Toasts, alertas raid |
+| `LocalizationController` | Idioma activo, selector ajustes, refresh UI al cambiar locale |
 
 **Componentes reutilizables** (`Shared/UI/` o `Controllers/Components/`): `StatBar`, `ItemSlot`, `QuestTracker`, `Toast`, `ConfirmModal`, `TabPanel`.
 
@@ -2852,6 +2919,27 @@ El cliente **nunca** predice resultados; espera snapshot post-acción o muestra 
 - Controllers extienden `BaseController`; conexiones vía Trove
 - Tipado estricto payloads eventos en `Shared/Types/`
 - Tests manuales checklist: móvil 375px + PC 1920px
+- **i18n:** probar HUD y menús en `en` y `es`; verificar fallback a `en`
+
+### 10.22 Localización e idiomas (UI)
+
+| Regla | Detalle |
+|-------|---------|
+| **Módulo** | `Shared/Localization/` — `Localization.luau` + tablas `Locales/en.luau`, `Locales/es.luau` |
+| **API cliente** | `Localization.get(key)`, `Localization.format(key, params)`, `Localization.getLocale()` |
+| **Default** | `"en"` si no hay preferencia |
+| **Cambio de idioma** | Controller envía intent → Service valida y guarda `settings.locale` → UI refresca vía señal/evento |
+| **Prohibido** | Strings visibles hardcodeados en controllers (excepto claves de debug internas) |
+| **Items/recetas** | `displayName` en constants = clave i18n o lookup vía `Localization.get("item." .. id .. ".name")` |
+
+#### Pantalla de ajustes — Idioma
+
+| Opción UI (locale `en`) | Opción UI (locale `es`) | Valor guardado |
+|-------------------------|---------------------------|----------------|
+| English | English | `en` |
+| Spanish | Español | `es` |
+
+Al cambiar idioma, todos los ScreenGui activos reciben refresh (controllers suscritos a `LocaleChanged`).
 
 ---
 
@@ -2870,13 +2958,12 @@ El cliente **nunca** predice resultados; espera snapshot post-acción o muestra 
 | 0.9 | 2026-06-19 | 8 | Cap. 8 Progresión: tutorial, misiones, XP, logros |
 | 1.0 | 2026-06-19 | 9 | Cap. 9 Economía: Brasas, tienda, Game Passes, Developer Products |
 | 1.1 | 2026-06-19 | 10 | Cap. 10 UX/UI: HUD, pantallas, feedback, controllers — **GDD completo** |
+| 1.2 | 2026-06-19 | 1, 10 | Localización multilingüe: **EN default** + ES; extensible (§1.11, §10.22) |
 
 ---
 
 ## Estado del documento
 
-**GDD v1.1 — Completo.** Los 10 capítulos están redactados.
+**GDD v1.2 — Completo.** Incluye localización EN/ES (default EN).
 
-**Siguiente fase (cuando lo indiques):** crear [`docs/Implementation-Plan.md`](Implementation-Plan.md) — plan de implementación técnica paso a paso derivado de este GDD.
-
-**Estado Cap. 10:** ⏳ Pendiente de tu revisión y aprobación final del GDD.
+**Implementación:** [`docs/Implementation-Plan.md`](Implementation-Plan.md) · specs en `openspec/specs/localization/`.

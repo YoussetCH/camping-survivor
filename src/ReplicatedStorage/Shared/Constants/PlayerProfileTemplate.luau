@@ -10,7 +10,9 @@ export type PlayerProfileTemplate = {
 		deaths: number,
 	},
 	quests: {},
-	settings: {},
+	settings: {
+		locale: string,
+	},
 	survival: {
 		hunger: number,
 		thirst: number,
@@ -42,7 +44,9 @@ local PlayerProfileTemplate: PlayerProfileTemplate = {
 		deaths = 0,
 	},
 	quests = {},
-	settings = {},
+	settings = {
+		locale = "en",
+	},
 	survival = {
 		hunger = 80,
 		thirst = 80,

@@ -19,6 +19,7 @@ alwaysApply: true
 - Extend `PlayerProfile` only with typed fields + template reconcile
 - Services hold business logic; Controllers handle UI/input only
 - Repositories are the only ProfileStore access
+- Player-visible strings use localization keys (`roblox-i18n.mdc`); default locale `en`
 
 ## After implementation
 

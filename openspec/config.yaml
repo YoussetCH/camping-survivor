@@ -8,8 +8,16 @@ project:
 
 sources:
   product_spec: docs/GDD-Camping-Survivor.md
-  product_spec_version: "1.1"
+  product_spec_version: "1.2"
   implementation_index: docs/Implementation-Plan.md
+
+localization:
+  default_locale: en
+  launch_locales: [en, es]
+  extensible: true
+  spec: openspec/specs/localization/spec.md
+  module_path: src/ReplicatedStorage/Shared/Localization
+  profile_setting: settings.locale
 
 stack:
   build: rojo
@@ -27,6 +35,7 @@ rules:
   - .cursor/rules/roblox-types.mdc
   - .cursor/rules/roblox-performance.mdc
   - .cursor/rules/roblox-openspec.mdc
+  - .cursor/rules/roblox-i18n.mdc
 
 capabilities:
   foundation:
@@ -62,6 +71,9 @@ capabilities:
   ui:
     gdd: "Cap. 10"
     spec: openspec/specs/ui/spec.md
+  localization:
+    gdd: "§1.11"
+    spec: openspec/specs/localization/spec.md
 
 conventions:
   remotes_registry: src/ReplicatedStorage/Shared/Constants/Remotes.luau
@@ -69,9 +81,11 @@ conventions:
   profile_template: src/ReplicatedStorage/Shared/Constants/PlayerProfileTemplate.luau
   items_constants: src/ReplicatedStorage/Shared/Constants/Items.luau
   recipes_constants: src/ReplicatedStorage/Shared/Constants/Recipes.luau
+  localization_module: src/ReplicatedStorage/Shared/Localization/Localization.luau
+  locale_tables: src/ReplicatedStorage/Shared/Localization/Locales/
 
 workflow:
-  active_change: openspec/changes/slice-02-survival
+  active_change: openspec/changes/slice-03-inventory
   one_slice_at_a_time: true
   archive_path: openspec/changes/archive
   schema: openspec/schemas/roblox-slice.yaml

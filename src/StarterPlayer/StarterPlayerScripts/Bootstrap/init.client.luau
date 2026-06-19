@@ -3,8 +3,20 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local ClientKernel = require(script.Parent.Parent.Kernel.ClientKernel)
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
+
+local function getPlayerScripts(): PlayerScripts
+	local parent = script.Parent
+
+	if parent:IsA("PlayerScripts") then
+		return parent
+	end
+
+	return parent.Parent :: PlayerScripts
+end
+
+local playerScripts = getPlayerScripts()
+local ClientKernel = require(playerScripts:WaitForChild("Kernel").ClientKernel)
 
 local controllers = ClientKernel.loadControllers()
 

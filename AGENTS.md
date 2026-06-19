@@ -61,3 +61,11 @@ Never place business logic inside LocalScripts.
 Server is always authoritative.
 
 UI is passive: display data and send user intent only.
+
+## Localization (required)
+
+- **Default language:** English (`en`). **Launch:** English + Spanish (`es`).
+- GDD §1.11 · technical spec: [openspec/specs/localization/spec.md](openspec/specs/localization/spec.md)
+- No hardcoded player-facing strings in controllers; use `Shared/Localization/`
+- Persist preference in `PlayerProfile.settings.locale` (server validates)
+- Extensible: new language = new locale file + registry entry

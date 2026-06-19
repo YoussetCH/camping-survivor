@@ -5,14 +5,27 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local BaseService = require(ServerScriptService.Kernel.BaseService)
+local LocaleRegistry = require(ReplicatedStorage.Shared.Localization.LocaleRegistry)
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local Networking = require(ReplicatedStorage.Shared.Networking.Networking)
 local PlayerDataRepositoryModule = require(ServerScriptService.Repositories.PlayerDataRepository)
 local PlayerSyncService = require(ServerScriptService.Services.PlayerSyncService)
+local PlayerProfileTypes = require(ReplicatedStorage.Shared.Types.PlayerProfile)
 
 local PlayerDataService = BaseService.new("PlayerDataService")
 
 local repository: PlayerDataRepositoryModule.PlayerDataRepository? = nil
+
+local function normalizeSettings(data: PlayerProfileTypes.PlayerProfile)
+	if type(data.settings) ~= "table" then
+		data.settings = { locale = LocaleRegistry.DEFAULT_LOCALE }
+		return
+	end
+
+	if not LocaleRegistry.isSupported(data.settings.locale) then
+		data.settings.locale = LocaleRegistry.DEFAULT_LOCALE
+	end
+end
 
 local function onPlayerAdded(player: Player)
 	if repository == nil then
@@ -28,6 +41,7 @@ local function onPlayerAdded(player: Player)
 	local data = repository:GetData(player)
 
 	if data ~= nil then
+		normalizeSettings(data)
 		Networking.getEvent("PlayerDataLoadedEvent"):FireClient(player, data)
 		PlayerSyncService.syncToClient(player, data)
 	end

@@ -5,66 +5,67 @@ local ItemTypes = require(script.Parent.Parent.Types.Item)
 export type ItemsModule = {
 	get: (id: string) -> ItemTypes.ItemDefinition?,
 	getAll: () -> { ItemTypes.ItemDefinition },
+	getNameKey: (id: string) -> string,
 }
 
 local definitions: { [string]: ItemTypes.ItemDefinition } = {
 	stick = {
 		id = "stick",
-		displayName = "Palo",
+		nameKey = "item.stick.name",
 		category = "raw",
 		maxStack = 30,
 	},
 	stone = {
 		id = "stone",
-		displayName = "Piedra",
+		nameKey = "item.stone.name",
 		category = "raw",
 		maxStack = 30,
 	},
 	flint = {
 		id = "flint",
-		displayName = "Pedernal",
+		nameKey = "item.flint.name",
 		category = "raw",
 		maxStack = 10,
 	},
 	leaf = {
 		id = "leaf",
-		displayName = "Hojas",
+		nameKey = "item.leaf.name",
 		category = "raw",
 		maxStack = 30,
 	},
 	fiber = {
 		id = "fiber",
-		displayName = "Fibra",
+		nameKey = "item.fiber.name",
 		category = "raw",
 		maxStack = 30,
 	},
 	tinder = {
 		id = "tinder",
-		displayName = "Yesca",
+		nameKey = "item.tinder.name",
 		category = "processed",
 		maxStack = 10,
 	},
 	berry = {
 		id = "berry",
-		displayName = "Bayas",
+		nameKey = "item.berry.name",
 		category = "food",
 		maxStack = 30,
 	},
 	bandage = {
 		id = "bandage",
-		displayName = "Vendaje",
+		nameKey = "item.bandage.name",
 		category = "medicine",
 		maxStack = 10,
 	},
 	sparks = {
 		id = "sparks",
-		displayName = "Chispas",
+		nameKey = "item.sparks.name",
 		category = "processed",
 		maxStack = 10,
 	},
 	wood = {
 		id = "wood",
-		displayName = "Madera",
+		nameKey = "item.wood.name",
 		category = "raw",
 		maxStack = 30,
 	},
@@ -84,6 +85,16 @@ function Items.getAll(): { ItemTypes.ItemDefinition }
 	end
 
 	return allItems
+end
+
+function Items.getNameKey(id: string): string
+	local item = definitions[id]
+
+	if item ~= nil then
+		return item.nameKey
+	end
+
+	return `item.{id}.name`
 end
 
 return Items

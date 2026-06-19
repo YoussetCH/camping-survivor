@@ -1,0 +1,13 @@
+{
+  "className": "Part",
+  "properties": {
+    "Anchored": true,
+    "BottomSurface": "Smooth",
+    "TopSurface": "Smooth",
+    "Size": [512, 20, 512],
+    "Position": [0, -10, 0],
+    "Color": [0.352941, 0.647059, 0.352941],
+    "Material": "Grass",
+    "Name": "DevBaseplate"
+  }
+}
