@@ -1,5 +1,9 @@
 --!strict
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local ItemIcon = require(ReplicatedStorage.Shared.UI.ItemIcon)
+
 export type InventorySlotConfig = {
 	slotKey: string?,
 	layoutOrder: number?,
@@ -39,6 +43,16 @@ function InventorySlotModule.create(parent: Instance, config: InventorySlotConfi
 	root.Parent = parent
 	createCorner(root, 8)
 
+	local iconImage = Instance.new("ImageLabel")
+	iconImage.Name = "Icon"
+	iconImage.AnchorPoint = Vector2.new(0.5, 0.5)
+	iconImage.Position = UDim2.fromScale(0.5, 0.5)
+	iconImage.Size = UDim2.fromOffset(36, 36)
+	iconImage.BackgroundTransparency = 1
+	iconImage.ScaleType = Enum.ScaleType.Fit
+	iconImage.Visible = false
+	iconImage.Parent = root
+
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Name = "Name"
 	nameLabel.Size = UDim2.new(1, -4, 0, 14)
@@ -50,6 +64,7 @@ function InventorySlotModule.create(parent: Instance, config: InventorySlotConfi
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	nameLabel.Text = ""
+	nameLabel.Visible = false
 	nameLabel.Parent = root
 
 	local quantityLabel = Instance.new("TextLabel")
@@ -63,10 +78,23 @@ function InventorySlotModule.create(parent: Instance, config: InventorySlotConfi
 	quantityLabel.TextColor3 = Color3.fromRGB(255, 220, 120)
 	quantityLabel.TextXAlignment = Enum.TextXAlignment.Right
 	quantityLabel.Text = ""
+	quantityLabel.ZIndex = 2
 	quantityLabel.Parent = root
 
 	local self: InventorySlot = {} :: InventorySlot
 	local bagSlotKey: string? = config.slotKey
+	local isEquipped = false
+	local isSelected = false
+
+	local function refreshBackground()
+		if isEquipped then
+			root.BackgroundColor3 = EQUIPPED_COLOR
+		elseif isSelected then
+			root.BackgroundColor3 = SELECTED_COLOR
+		else
+			root.BackgroundColor3 = EMPTY_COLOR
+		end
+	end
 
 	function self.setBagSlotKey(_self: InventorySlot, nextSlotKey: string?)
 		bagSlotKey = nextSlotKey
@@ -76,30 +104,28 @@ function InventorySlotModule.create(parent: Instance, config: InventorySlotConfi
 	function self.setItem(_self: InventorySlot, itemId: string?, quantity: number?, displayName: string?)
 		if itemId == nil or quantity == nil or quantity <= 0 then
 			nameLabel.Text = ""
+			nameLabel.Visible = false
 			quantityLabel.Text = ""
-			root.BackgroundColor3 = EMPTY_COLOR
+			ItemIcon.applyTo(iconImage, nil)
+			refreshBackground()
 			return
 		end
 
+		ItemIcon.applyTo(iconImage, itemId)
 		nameLabel.Text = displayName or itemId
+		nameLabel.Visible = not iconImage.Visible
 		quantityLabel.Text = if quantity > 1 then tostring(quantity) else ""
+		root:SetAttribute("Tooltip", displayName or itemId)
 	end
 
 	function self.setSelected(_self: InventorySlot, selected: boolean)
-		if selected then
-			root.BackgroundColor3 = SELECTED_COLOR
-			return
-		end
-
-		root.BackgroundColor3 = EMPTY_COLOR
+		isSelected = selected
+		refreshBackground()
 	end
 
 	function self.setEquipped(_self: InventorySlot, equipped: boolean)
-		if equipped then
-			root.BackgroundColor3 = EQUIPPED_COLOR
-		elseif root.BackgroundColor3 == EQUIPPED_COLOR then
-			root.BackgroundColor3 = EMPTY_COLOR
-		end
+		isEquipped = equipped
+		refreshBackground()
 	end
 
 	function self.destroy(_self: InventorySlot)

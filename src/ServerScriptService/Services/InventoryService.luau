@@ -118,6 +118,157 @@ function InventoryService.grantItem(player: Player, itemId: string, quantity: nu
 	return remaining <= 0
 end
 
+function InventoryService.countItem(data: PlayerProfileTypes.PlayerProfile, itemId: string): number
+	local total = 0
+
+	for _, slotItem in data.inventory do
+		if slotItem.itemId == itemId then
+			total += slotItem.quantity
+		end
+	end
+
+	return total
+end
+
+function InventoryService.canFitOutputs(
+	data: PlayerProfileTypes.PlayerProfile,
+	outputs: { { itemId: string, quantity: number } }
+): boolean
+	local simulatedBag: InventoryTypes.BagSlots = {}
+
+	for slotKey, slotItem in data.inventory do
+		simulatedBag[slotKey] = {
+			itemId = slotItem.itemId,
+			quantity = slotItem.quantity,
+		}
+	end
+
+	for _, output in outputs do
+		local definition = Items.get(output.itemId)
+
+		if definition == nil or output.quantity <= 0 then
+			return false
+		end
+
+		local remaining = output.quantity
+		local maxStack = InventoryConstants.getMaxStack(output.itemId)
+
+		for slotIndex = 1, InventoryConstants.BAG_SLOT_COUNT do
+			if remaining <= 0 then
+				break
+			end
+
+			local slotKey = InventoryConstants.getBagSlotKey(slotIndex)
+			local slotItem = simulatedBag[slotKey]
+
+			if slotItem ~= nil and slotItem.itemId == output.itemId then
+				local space = maxStack - slotItem.quantity
+
+				if space > 0 then
+					local added = math.min(space, remaining)
+					slotItem.quantity += added
+					remaining -= added
+				end
+			end
+		end
+
+		while remaining > 0 do
+			local emptySlotKey: string? = nil
+
+			for slotIndex = 1, InventoryConstants.BAG_SLOT_COUNT do
+				local slotKey = InventoryConstants.getBagSlotKey(slotIndex)
+
+				if simulatedBag[slotKey] == nil then
+					emptySlotKey = slotKey
+					break
+				end
+			end
+
+			if emptySlotKey == nil then
+				return false
+			end
+
+			local added = math.min(maxStack, remaining)
+			simulatedBag[emptySlotKey] = {
+				itemId = output.itemId,
+				quantity = added,
+			}
+			remaining -= added
+		end
+	end
+
+	return true
+end
+
+function InventoryService.removeItems(
+	player: Player,
+	data: PlayerProfileTypes.PlayerProfile,
+	inputs: { { itemId: string, quantity: number } }
+): boolean
+	for _, input in inputs do
+		if InventoryService.countItem(data, input.itemId) < input.quantity then
+			return false
+		end
+	end
+
+	local removedKeys: { [string]: boolean } = {}
+
+	for _, input in inputs do
+		local remaining = input.quantity
+
+		for slotIndex = 1, InventoryConstants.BAG_SLOT_COUNT do
+			if remaining <= 0 then
+				break
+			end
+
+			local slotKey = InventoryConstants.getBagSlotKey(slotIndex)
+			local slotItem = data.inventory[slotKey]
+
+			if slotItem ~= nil and slotItem.itemId == input.itemId then
+				local removed = math.min(slotItem.quantity, remaining)
+				slotItem.quantity -= removed
+				remaining -= removed
+
+				if slotItem.quantity <= 0 then
+					data.inventory[slotKey] = nil
+					removedKeys[slotKey] = true
+
+					if data.equipped.toolItemId == input.itemId then
+						local stillHasItem = InventoryService.countItem(data, input.itemId) > 0
+
+						if not stillHasItem then
+							data.equipped.toolItemId = nil
+						end
+					end
+				end
+			end
+		end
+
+		if remaining > 0 then
+			return false
+		end
+	end
+
+	InventoryTypes.clearHotbarReferences(data.hotbar, removedKeys)
+	syncInventory(player, data)
+	return true
+end
+
+function InventoryService.grantItems(
+	player: Player,
+	outputs: { { itemId: string, quantity: number } }
+): boolean
+	for _, output in outputs do
+		local granted = InventoryService.grantItem(player, output.itemId, output.quantity)
+
+		if not granted then
+			return false
+		end
+	end
+
+	return true
+end
+
 function InventoryService.removeFromBagSlot(
 	player: Player,
 	data: PlayerProfileTypes.PlayerProfile,
@@ -291,6 +442,9 @@ local function grantStudioStarterItems(player: Player)
 
 	InventoryService.grantItem(player, "stick", 5)
 	InventoryService.grantItem(player, "flint", 2)
+	InventoryService.grantItem(player, "leaf", 4)
+	InventoryService.grantItem(player, "fiber", 4)
+	InventoryService.grantItem(player, "wood", 6)
 	InventoryService.grantItem(player, "bandage", 3)
 	InventoryService.grantItem(player, "stone_axe", 1)
 	Logger.info("InventoryService", `Granted studio starter items to {player.Name}`)

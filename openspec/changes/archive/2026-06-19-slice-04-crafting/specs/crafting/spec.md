@@ -1,14 +1,4 @@
-# Crafting — Technical Spec
-
-**Status:** Implemented (slice-04, tutorial hands recipes)  
-**GDD:** Cap. 4  
-**Service:** CraftingService
-
-## Purpose
-
-Recipes, craft stations, experimentation, blueprint output. v0.1 ships tutorial `hands` recipes only.
-
-## Requirements
+## ADDED Requirements
 
 ### Requirement: Recipe catalog
 
@@ -81,9 +71,3 @@ The server SHALL fire `RecipesUpdatedEvent` with `{ unlocked }` after profile lo
 - GIVEN a player joins with tutorial recipes unlocked
 - WHEN sync runs
 - THEN the client receives `RecipesUpdatedEvent` with the unlocked list
-
-## Related
-
-- [inventory/spec.md](../inventory/spec.md) — consume/grant items
-- [ui/spec.md](../ui/spec.md) — crafting panel
-- [camp/spec.md](../camp/spec.md) — craft stations (slice-05)

@@ -7,6 +7,7 @@ export type ItemDefinition = {
 	nameKey: string,
 	category: ItemCategory,
 	maxStack: number,
+	iconAssetId: number,
 }
 
 return {}

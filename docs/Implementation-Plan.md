@@ -4,15 +4,15 @@
 > **Product spec:** [GDD-Camping-Survivor.md](./GDD-Camping-Survivor.md) v1.2  
 > **Idiomas:** English (default) · Español — extensible ([§1.11](./GDD-Camping-Survivor.md#111-localización-e-idiomas))
 > **Specs técnicas:** [`openspec/specs/`](../openspec/specs/)  
-> **Slice activo:** Próximo — `slice-04-crafting`  
-> **Último completado:** [`archive/2026-06-19-slice-03-inventory`](../openspec/changes/archive/2026-06-19-slice-03-inventory/)
+> **Slice activo:** Próximo — `slice-05-camp`  
+> **Último completado:** [`archive/2026-06-19-slice-04-crafting`](../openspec/changes/archive/2026-06-19-slice-04-crafting/)
 
 ## Workflow OpenSpec (Cursor)
 
 Flujo oficial — usar **slash commands** en el chat de Cursor:
 
 ```
-/opsx:propose slice-04-crafting     → proposal, specs, design, tasks, verify
+/opsx:propose slice-05-camp         → proposal, specs, design, tasks, verify
 /opsx:apply                         → implementa tasks.md del change activo
 /opsx:archive                       → merge specs + archiva (tras verify + tu OK)
 ```
@@ -36,9 +36,9 @@ openspec archive <name> -y
 openspec update    # refrescar comandos /opsx:* en Cursor
 ```
 
-**Change activo:** ninguno — crear con `/opsx:propose slice-04-crafting`
+**Change activo:** ninguno — crear con `/opsx:propose slice-05-camp`
 
-**Siguiente slice planificado:** `slice-04-crafting`
+**Siguiente slice planificado:** `slice-05-camp`
 
 ## Localización (cross-cutting, GDD v1.2)
 
@@ -58,8 +58,8 @@ openspec update    # refrescar comandos /opsx:* en Cursor
 | 02 | `slice-02-survival` | survival | Cap. 3 | Completado |
 | 02b | `slice-02b-localization` | localization | §1.11 | Completado |
 | 03 | `slice-03-inventory` | inventory | Cap. 4 | Completado |
-| 04 | `slice-04-crafting` | crafting | Cap. 4 | **Próximo** |
-| 05 | `slice-05-camp` | camp | Cap. 6 | Pendiente |
+| 04 | `slice-04-crafting` | crafting | Cap. 4 | Completado |
+| 05 | `slice-05-camp` | camp | Cap. 6 | **Próximo** |
 | 06 | `slice-06-world` | world | Cap. 5 | Pendiente |
 | 07 | `slice-07-fauna` | survival + world | Cap. 3/5 | Pendiente |
 | 08 | `slice-08-quests` | quests | Cap. 8 | Pendiente |

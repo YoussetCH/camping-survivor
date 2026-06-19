@@ -116,7 +116,7 @@ conventions:
   locale_tables: src/ReplicatedStorage/Shared/Localization/Locales/
 
 workflow:
-  active_change: openspec/changes/slice-04-crafting
+  active_change: openspec/changes/slice-05-camp
   one_slice_at_a_time: true
   archive_path: openspec/changes/archive
   schema_path: openspec/schemas/roblox-slice/schema.yaml

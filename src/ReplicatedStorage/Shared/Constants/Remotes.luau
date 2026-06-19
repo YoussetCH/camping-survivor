@@ -12,6 +12,9 @@ local Remotes = {
 		"EquipItemEvent",
 		"SetHotbarSlotEvent",
 		"UseItemEvent",
+		"CraftItemEvent",
+		"CraftResultEvent",
+		"RecipesUpdatedEvent",
 	},
 	Functions = {},
 }

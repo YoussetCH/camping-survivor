@@ -18,6 +18,7 @@ local INIT_ORDER = {
 	"LocalizationController",
 	"SurvivalHUDController",
 	"InventoryHUDController",
+	"CraftingHUDController",
 	"UIController",
 	"ClientSyncController",
 }

@@ -5,6 +5,7 @@ local RecipeTypes = require(script.Parent.Parent.Types.Recipe)
 export type RecipesModule = {
 	get: (id: string) -> RecipeTypes.RecipeDefinition?,
 	getAll: () -> { RecipeTypes.RecipeDefinition },
+	getIconItemId: (id: string) -> string?,
 }
 
 local definitions: { [string]: RecipeTypes.RecipeDefinition } = {
@@ -77,6 +78,16 @@ function Recipes.getAll(): { RecipeTypes.RecipeDefinition }
 	end
 
 	return allRecipes
+end
+
+function Recipes.getIconItemId(id: string): string?
+	local recipe = definitions[id]
+
+	if recipe == nil or #recipe.outputs == 0 then
+		return nil
+	end
+
+	return recipe.outputs[1].itemId
 end
 
 return Recipes
