@@ -2,7 +2,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local BaseController = require(script.Parent.BaseController)
+local BaseController = require(script.Parent.Parent.Kernel.BaseController)
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local Networking = require(ReplicatedStorage.Shared.Networking.Networking)
 local PlayerProfileTypes = require(ReplicatedStorage.Shared.Types.PlayerProfile)

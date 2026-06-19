@@ -1,0 +1,58 @@
+## ADDED Requirements
+
+### Requirement: Extended player profile schema
+
+The system SHALL persist an extended `PlayerProfile` including survival stats, status effects, camp data, unlocked recipes, monetization purchase tracking, tutorial completion, and extended stats (playTime, deaths).
+
+#### Scenario: New player defaults
+
+- GIVEN a player joins for the first time
+- WHEN the profile is reconciled from template
+- THEN survival.hunger and survival.thirst are 80
+- AND survival.health is 100
+- AND survival.temperature is 50
+- AND camp.level is 0
+- AND tutorialCompleted is false
+
+### Requirement: Domain sync remotes registry
+
+The system SHALL register RemoteEvents: `SurvivalUpdatedEvent`, `InventoryUpdatedEvent`, `CampUpdatedEvent`, `QuestProgressEvent` under `ReplicatedStorage.Remotes.Events`.
+
+#### Scenario: Remote instances exist at server start
+
+- GIVEN the server has finished `NetworkingService:Init`
+- WHEN any registered event name is queried
+- THEN a RemoteEvent instance exists with that name
+
+### Requirement: Initial sync on join
+
+The system SHALL fire domain sync events to the client after a successful profile load, projecting current profile data.
+
+#### Scenario: Player joins with loaded profile
+
+- GIVEN a player profile loaded successfully
+- WHEN initial sync runs
+- THEN `SurvivalUpdatedEvent` fires with current survival stats and status effects
+- AND `InventoryUpdatedEvent` fires with current inventory
+- AND `CampUpdatedEvent` fires with current camp data
+- AND `QuestProgressEvent` fires with current quest progress
+
+### Requirement: Item and recipe constants
+
+The system SHALL expose static item and tutorial recipe definitions in `Shared/Constants/Items.luau` and `Shared/Constants/Recipes.luau` for use by future crafting/inventory slices.
+
+#### Scenario: Tutorial item lookup
+
+- GIVEN code requires item id `flint`
+- WHEN `Items.get("flint")` is called
+- THEN a valid `ItemDefinition` is returned
+
+### Requirement: Client sync reception
+
+The client SHALL subscribe to domain sync events and cache the latest payloads without applying gameplay logic.
+
+#### Scenario: Client receives survival sync
+
+- GIVEN the client is running
+- WHEN `SurvivalUpdatedEvent` fires from server
+- THEN `ClientSyncController` stores the snapshot without error

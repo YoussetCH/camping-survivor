@@ -1,0 +1,77 @@
+# OpenSpec-compatible config — Camping Survivor
+# Context for AI agents (Cursor). No CLI required.
+
+project:
+  name: camping-survivor
+  language: luau
+  platform: roblox
+
+sources:
+  product_spec: docs/GDD-Camping-Survivor.md
+  product_spec_version: "1.1"
+  implementation_index: docs/Implementation-Plan.md
+
+stack:
+  build: rojo
+  packages: wally
+  persistence: ProfileStore
+  architecture: Services + Controllers + Repositories
+
+rules:
+  - .cursor/rules/roblox-core.mdc
+  - .cursor/rules/roblox-architecture.mdc
+  - .cursor/rules/roblox-networking.mdc
+  - .cursor/rules/roblox-security.mdc
+  - .cursor/rules/roblox-datastore.mdc
+  - .cursor/rules/roblox-ui.mdc
+  - .cursor/rules/roblox-types.mdc
+  - .cursor/rules/roblox-performance.mdc
+  - .cursor/rules/roblox-openspec.mdc
+
+capabilities:
+  foundation:
+    gdd: Infrastructure
+    spec: openspec/specs/foundation/spec.md
+  survival:
+    gdd: "Cap. 3"
+    spec: openspec/specs/survival/spec.md
+  inventory:
+    gdd: "Cap. 4"
+    spec: openspec/specs/inventory/spec.md
+  crafting:
+    gdd: "Cap. 4"
+    spec: openspec/specs/crafting/spec.md
+  camp:
+    gdd: "Cap. 6"
+    spec: openspec/specs/camp/spec.md
+  world:
+    gdd: "Cap. 5"
+    spec: openspec/specs/world/spec.md
+  helpers:
+    gdd: "§2.13"
+    spec: openspec/specs/helpers/spec.md
+  quests:
+    gdd: "Cap. 8"
+    spec: openspec/specs/quests/spec.md
+  multiplayer:
+    gdd: "Cap. 7"
+    spec: openspec/specs/multiplayer/spec.md
+  economy:
+    gdd: "Cap. 9"
+    spec: openspec/specs/economy/spec.md
+  ui:
+    gdd: "Cap. 10"
+    spec: openspec/specs/ui/spec.md
+
+conventions:
+  remotes_registry: src/ReplicatedStorage/Shared/Constants/Remotes.luau
+  profile_types: src/ReplicatedStorage/Shared/Types/PlayerProfile.luau
+  profile_template: src/ReplicatedStorage/Shared/Constants/PlayerProfileTemplate.luau
+  items_constants: src/ReplicatedStorage/Shared/Constants/Items.luau
+  recipes_constants: src/ReplicatedStorage/Shared/Constants/Recipes.luau
+
+workflow:
+  active_change: openspec/changes/slice-02-survival
+  one_slice_at_a_time: true
+  archive_path: openspec/changes/archive
+  schema: openspec/schemas/roblox-slice.yaml

@@ -1,0 +1,38 @@
+---
+description: OpenSpec-compatible implementation workflow for Camping Survivor
+alwaysApply: true
+---
+
+# OpenSpec-compatible workflow
+
+## Before writing code
+
+1. Read `openspec/config.yaml` for active slice
+2. Read all files in `openspec/changes/<active-slice>/`
+3. Read `openspec/specs/<capability>/spec.md` for affected capabilities
+4. Read relevant section of `docs/GDD-Camping-Survivor.md`
+
+## During implementation
+
+- Follow `tasks.md` in order; mark `[x]` when done
+- Register new remotes in `src/ReplicatedStorage/Shared/Constants/Remotes.luau`
+- Extend `PlayerProfile` only with typed fields + template reconcile
+- Services hold business logic; Controllers handle UI/input only
+- Repositories are the only ProfileStore access
+
+## After implementation
+
+- Satisfy every item in `verify.md`
+- Merge ADDED/MODIFIED requirements into `openspec/specs/`
+- Move change folder to `openspec/changes/archive/YYYY-MM-DD-<slice-id>/`
+- Update `openspec/config.yaml` `workflow.active_change` to next slice
+
+## Extending or modifying features
+
+| Action | Process |
+|--------|---------|
+| New feature | New `openspec/changes/<name>/` with ADDED delta |
+| Change behavior | Change folder with MODIFIED delta (before/after) |
+| Bug fix | Small change folder or patch delta if spec was wrong |
+
+Never implement gameplay without an spec delta in the change folder.

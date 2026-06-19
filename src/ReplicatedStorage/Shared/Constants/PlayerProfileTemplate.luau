@@ -6,9 +6,30 @@ export type PlayerProfileTemplate = {
 	stats: {
 		level: number,
 		xp: number,
+		playTime: number,
+		deaths: number,
 	},
 	quests: {},
 	settings: {},
+	survival: {
+		hunger: number,
+		thirst: number,
+		health: number,
+		temperature: number,
+	},
+	statusEffects: {},
+	camp: {
+		plotId: string?,
+		level: number,
+	},
+	recipes: {
+		unlocked: { string },
+	},
+	clanId: string?,
+	monetization: {
+		purchases: { [string]: unknown },
+	},
+	tutorialCompleted: boolean,
 }
 
 local PlayerProfileTemplate: PlayerProfileTemplate = {
@@ -17,9 +38,30 @@ local PlayerProfileTemplate: PlayerProfileTemplate = {
 	stats = {
 		level = 1,
 		xp = 0,
+		playTime = 0,
+		deaths = 0,
 	},
 	quests = {},
 	settings = {},
+	survival = {
+		hunger = 80,
+		thirst = 80,
+		health = 100,
+		temperature = 50,
+	},
+	statusEffects = {},
+	camp = {
+		plotId = nil,
+		level = 0,
+	},
+	recipes = {
+		unlocked = {},
+	},
+	clanId = nil,
+	monetization = {
+		purchases = {},
+	},
+	tutorialCompleted = false,
 }
 
 return PlayerProfileTemplate

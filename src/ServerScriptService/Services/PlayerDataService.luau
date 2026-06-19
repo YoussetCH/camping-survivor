@@ -8,6 +8,7 @@ local BaseService = require(ServerScriptService.Kernel.BaseService)
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local Networking = require(ReplicatedStorage.Shared.Networking.Networking)
 local PlayerDataRepositoryModule = require(ServerScriptService.Repositories.PlayerDataRepository)
+local PlayerSyncService = require(ServerScriptService.Services.PlayerSyncService)
 
 local PlayerDataService = BaseService.new("PlayerDataService")
 
@@ -28,6 +29,7 @@ local function onPlayerAdded(player: Player)
 
 	if data ~= nil then
 		Networking.getEvent("PlayerDataLoadedEvent"):FireClient(player, data)
+		PlayerSyncService.syncToClient(player, data)
 	end
 end
 
