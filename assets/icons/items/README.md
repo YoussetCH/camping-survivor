@@ -1,6 +1,6 @@
-# Item icons
+# Item icons (source PNGs)
 
-PNG source files for inventory and crafting UI. Uploaded to Roblox via Studio MCP; asset IDs live in `src/ReplicatedStorage/Shared/Constants/Items.luau` (`iconAssetId` per item).
+Archivos fuente de iconos. **Guía completa:** [docs/Item-Icons.md](../../../docs/Item-Icons.md)
 
 | File | Item ID |
 |------|---------|
@@ -17,10 +17,4 @@ PNG source files for inventory and crafting UI. Uploaded to Roblox via Studio MC
 | stone_axe.png | stone_axe |
 | bp_campfire.png | bp_campfire |
 
-Recipe icons use the first output item (`Recipes.getIconItemId`).
-
-To re-upload after editing PNGs:
-
-1. Serve this folder: `python3 -m http.server 8765`
-2. Use Studio MCP `upload_image` with `http://localhost:8765/<file>.png`
-3. Update `iconAssetId` values in `Items.luau`
+Resumen: editar PNG → subir a Roblox → actualizar `iconAssetId` en `src/ReplicatedStorage/Shared/Constants/Items.luau`.
