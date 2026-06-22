@@ -62,6 +62,32 @@ local definitions: { [string]: RecipeTypes.RecipeDefinition } = {
 			{ itemId = "bp_campfire", quantity = 1 },
 		},
 	},
+	recipe_craft_table = {
+		id = "recipe_craft_table",
+		nameKey = "recipe.recipe_craft_table.name",
+		unlockType = "tutorial",
+		station = "hands",
+		inputs = {
+			{ itemId = "wood", quantity = 4 },
+			{ itemId = "stone", quantity = 2 },
+		},
+		outputs = {
+			{ itemId = "bp_craft_table", quantity = 1 },
+		},
+	},
+	recipe_chest = {
+		id = "recipe_chest",
+		nameKey = "recipe.recipe_chest.name",
+		unlockType = "tutorial",
+		station = "craft_table",
+		inputs = {
+			{ itemId = "wood", quantity = 6 },
+			{ itemId = "rope", quantity = 1 },
+		},
+		outputs = {
+			{ itemId = "bp_chest", quantity = 1 },
+		},
+	},
 }
 
 local Recipes: RecipesModule = {}

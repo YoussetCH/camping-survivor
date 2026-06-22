@@ -2,6 +2,7 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ContextActionService = game:GetService("ContextActionService")
 local UserInputService = game:GetService("UserInputService")
 
 local BaseController = require(script.Parent.Parent.Kernel.BaseController)
@@ -21,8 +22,34 @@ type InventorySlotInstance = InventorySlotModule.InventorySlot
 local bagSlots: { InventorySlotInstance } = {}
 local hotbarSlots: { InventorySlotInstance } = {}
 local panelFrame: Frame? = nil
+local screenGui: ScreenGui? = nil
 local selectedBagSlotKey: string? = nil
 local latestSnapshot: PlayerProfileTypes.InventorySnapshot? = nil
+
+local PANEL_DISPLAY_ORDER = 105
+local PANEL_OPEN_DISPLAY_ORDER = 115
+
+local function normalizeSnapshot(snapshot: PlayerProfileTypes.InventorySnapshot): PlayerProfileTypes.InventorySnapshot
+	return {
+		inventory = if type(snapshot.inventory) == "table" then snapshot.inventory else InventoryTypes.createEmptyBag(),
+		hotbar = if type(snapshot.hotbar) == "table" then snapshot.hotbar else InventoryTypes.createEmptyHotbar(),
+		equipped = if type(snapshot.equipped) == "table" then snapshot.equipped else InventoryTypes.createEmptyEquipped(),
+	}
+end
+
+local function closeOtherHudPanels()
+	for _, controllerName in { "CraftingHUDController", "BuildingController", "ChestController" } do
+		local controller = ClientKernel.getController(controllerName)
+
+		if controller ~= nil then
+			local closePanel = (controller :: any).ClosePanel
+
+			if type(closePanel) == "function" then
+				closePanel(controller)
+			end
+		end
+	end
+end
 
 local function getItemDisplayName(itemId: string): string
 	local nameKey = Items.getNameKey(itemId)
@@ -38,19 +65,25 @@ local function refreshSelectedSlotHighlight()
 end
 
 local function renderSnapshot(snapshot: PlayerProfileTypes.InventorySnapshot)
-	latestSnapshot = snapshot
+	local normalizedSnapshot = normalizeSnapshot(snapshot)
+	latestSnapshot = normalizedSnapshot
 
 	for index = 1, InventoryConstants.BAG_SLOT_COUNT do
 		local slotKey = InventoryConstants.getBagSlotKey(index)
 		local slot = bagSlots[index]
-		local item = snapshot.inventory[slotKey]
+
+		if slot == nil then
+			continue
+		end
+
+		local item = normalizedSnapshot.inventory[slotKey]
 
 		if item == nil then
 			slot:setItem(nil, nil, nil)
 			slot:setEquipped(false)
 			slot:setSelected(selectedBagSlotKey == slotKey)
 		else
-			local isEquipped = snapshot.equipped.toolItemId == item.itemId
+			local isEquipped = normalizedSnapshot.equipped.toolItemId == item.itemId
 			slot:setItem(item.itemId, item.quantity, getItemDisplayName(item.itemId))
 			slot:setEquipped(isEquipped)
 			if not isEquipped then
@@ -61,20 +94,25 @@ local function renderSnapshot(snapshot: PlayerProfileTypes.InventorySnapshot)
 
 	for hotbarIndex = 1, InventoryConstants.HOTBAR_SLOT_COUNT do
 		local hotbarSlot = hotbarSlots[hotbarIndex]
-		local bagSlotKey = snapshot.hotbar[hotbarIndex]
+
+		if hotbarSlot == nil then
+			continue
+		end
+
+		local bagSlotKey = normalizedSnapshot.hotbar[hotbarIndex]
 
 		if bagSlotKey == nil then
 			hotbarSlot:setItem(nil, nil, nil)
 			hotbarSlot:setEquipped(false)
 		else
-			local item = snapshot.inventory[bagSlotKey]
+			local item = normalizedSnapshot.inventory[bagSlotKey]
 
 			if item == nil then
 				hotbarSlot:setItem(nil, nil, nil)
 				hotbarSlot:setEquipped(false)
 			else
 				hotbarSlot:setItem(item.itemId, item.quantity, getItemDisplayName(item.itemId))
-				hotbarSlot:setEquipped(snapshot.equipped.toolItemId == item.itemId)
+				hotbarSlot:setEquipped(normalizedSnapshot.equipped.toolItemId == item.itemId)
 			end
 		end
 	end
@@ -105,6 +143,16 @@ end
 local function onBagSlotActivated(bagSlotKey: string?)
 	selectedBagSlotKey = bagSlotKey
 	refreshSelectedSlotHighlight()
+
+	local chestController = ClientKernel.getController("ChestController")
+
+	if chestController ~= nil then
+		local setSelectedBagSlot = (chestController :: any).SetSelectedBagSlot
+
+		if type(setSelectedBagSlot) == "function" then
+			setSelectedBagSlot(bagSlotKey)
+		end
+	end
 end
 
 local function onHotbarSlotActivated(hotbarIndex: number)
@@ -126,12 +174,31 @@ local function setPanelVisible(visible: boolean)
 	if panelFrame ~= nil then
 		panelFrame.Visible = visible
 	end
+
+	if screenGui ~= nil then
+		screenGui.DisplayOrder = if visible then PANEL_OPEN_DISPLAY_ORDER else PANEL_DISPLAY_ORDER
+	end
+end
+
+local function openPanel()
+	closeOtherHudPanels()
+	setPanelVisible(true)
 end
 
 local function togglePanel()
-	if panelFrame ~= nil then
-		panelFrame.Visible = not panelFrame.Visible
+	if panelFrame == nil then
+		return
 	end
+
+	if panelFrame.Visible then
+		setPanelVisible(false)
+	else
+		openPanel()
+	end
+end
+
+function InventoryHUDController:ClosePanel()
+	setPanelVisible(false)
 end
 
 local function createActionButton(parent: Instance, labelKey: string, layoutOrder: number, onClick: () -> ()): TextButton
@@ -165,14 +232,15 @@ function InventoryHUDController:Init()
 		existingGui:Destroy()
 	end
 
-	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "InventoryHUD"
-	screenGui.ResetOnSpawn = false
-	screenGui.IgnoreGuiInset = true
-	screenGui.DisplayOrder = 105
-	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	screenGui.Parent = playerGui
-	trove:Add(screenGui)
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "InventoryHUD"
+	gui.ResetOnSpawn = false
+	gui.IgnoreGuiInset = true
+	gui.DisplayOrder = PANEL_DISPLAY_ORDER
+	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	gui.Parent = playerGui
+	screenGui = gui
+	trove:Add(gui)
 
 	local hotbarFrame = Instance.new("Frame")
 	hotbarFrame.Name = "Hotbar"
@@ -182,7 +250,7 @@ function InventoryHUDController:Init()
 	hotbarFrame.BackgroundColor3 = Color3.fromRGB(20, 22, 28)
 	hotbarFrame.BackgroundTransparency = 0.15
 	hotbarFrame.BorderSizePixel = 0
-	hotbarFrame.Parent = screenGui
+	hotbarFrame.Parent = gui
 
 	local hotbarCorner = Instance.new("UICorner")
 	hotbarCorner.CornerRadius = UDim.new(0, 8)
@@ -215,7 +283,7 @@ function InventoryHUDController:Init()
 	panelFrame.BorderSizePixel = 0
 	panelFrame.Visible = false
 	panelFrame.ZIndex = 5
-	panelFrame.Parent = screenGui
+	panelFrame.Parent = gui
 
 	local panelCorner = Instance.new("UICorner")
 	panelCorner.CornerRadius = UDim.new(0, 10)
@@ -309,7 +377,7 @@ function InventoryHUDController:Init()
 	toggleButton.TextColor3 = Color3.fromRGB(240, 240, 240)
 	toggleButton.Text = "I"
 	toggleButton.ZIndex = 10
-	toggleButton.Parent = screenGui
+	toggleButton.Parent = gui
 
 	local toggleCorner = Instance.new("UICorner")
 	toggleCorner.CornerRadius = UDim.new(0, 8)
@@ -322,14 +390,47 @@ function InventoryHUDController:Init()
 			return
 		end
 
-		if input.KeyCode == Enum.KeyCode.I then
-			togglePanel()
-			return
-		end
-
 		if input.KeyCode == Enum.KeyCode.Escape then
 			setPanelVisible(false)
 		end
+	end)
+
+	ContextActionService:BindAction(
+		"ToggleInventory",
+		function(_actionName, inputState)
+			if inputState ~= Enum.UserInputState.Begin then
+				return Enum.ContextActionResult.Pass
+			end
+
+			if UserInputService:GetFocusedTextBox() ~= nil then
+				return Enum.ContextActionResult.Pass
+			end
+
+			togglePanel()
+			return Enum.ContextActionResult.Sink
+		end,
+		false,
+		Enum.KeyCode.I
+	)
+
+	trove:Add(function()
+		ContextActionService:UnbindAction("ToggleInventory")
+	end)
+
+	trove:Connect(Networking.getEvent("InventoryUpdatedEvent").OnClientEvent, function(snapshot: PlayerProfileTypes.InventorySnapshot)
+		renderSnapshot(snapshot)
+	end)
+
+	trove:Connect(Networking.getEvent("PlayerDataLoadedEvent").OnClientEvent, function(profileData: PlayerProfileTypes.PlayerProfile)
+		if type(profileData.inventory) ~= "table" then
+			return
+		end
+
+		renderSnapshot({
+			inventory = profileData.inventory,
+			hotbar = profileData.hotbar,
+			equipped = profileData.equipped,
+		})
 	end)
 end
 
@@ -348,10 +449,6 @@ function InventoryHUDController:Start()
 		if latestSnapshot ~= nil then
 			renderSnapshot(latestSnapshot)
 		end
-	end)
-
-	trove:Connect(Networking.getEvent("InventoryUpdatedEvent").OnClientEvent, function(snapshot: PlayerProfileTypes.InventorySnapshot)
-		renderSnapshot(snapshot)
 	end)
 
 	local syncController = ClientKernel.getController("ClientSyncController")

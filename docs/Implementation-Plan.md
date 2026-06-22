@@ -4,8 +4,8 @@
 > **Product spec:** [GDD-Camping-Survivor.md](./GDD-Camping-Survivor.md) v1.2  
 > **Idiomas:** English (default) · Español — extensible ([§1.11](./GDD-Camping-Survivor.md#111-localización-e-idiomas))
 > **Specs técnicas:** [`openspec/specs/`](../openspec/specs/)  
-> **Slice activo:** Próximo — `slice-05-camp`  
-> **Último completado:** [`archive/2026-06-19-slice-04-crafting`](../openspec/changes/archive/2026-06-19-slice-04-crafting/)
+> **Slice activo:** Ninguno — próximo `slice-06-world`  
+> **Último completado:** [`archive/2026-06-22-slice-05-camp`](../openspec/changes/archive/2026-06-22-slice-05-camp/)
 
 ## Workflow OpenSpec (Cursor)
 
@@ -36,9 +36,9 @@ openspec archive <name> -y
 openspec update    # refrescar comandos /opsx:* en Cursor
 ```
 
-**Change activo:** ninguno — crear con `/opsx:propose slice-05-camp`
+**Change activo:** ninguno — crear con `/opsx:propose slice-06-world`
 
-**Siguiente slice planificado:** `slice-05-camp`
+**Siguiente slice planificado:** `slice-06-world`
 
 ## Localización (cross-cutting, GDD v1.2)
 
@@ -59,8 +59,8 @@ openspec update    # refrescar comandos /opsx:* en Cursor
 | 02b | `slice-02b-localization` | localization | §1.11 | Completado |
 | 03 | `slice-03-inventory` | inventory | Cap. 4 | Completado |
 | 04 | `slice-04-crafting` | crafting | Cap. 4 | Completado |
-| 05 | `slice-05-camp` | camp | Cap. 6 | **Próximo** |
-| 06 | `slice-06-world` | world | Cap. 5 | Pendiente |
+| 05 | `slice-05-camp` | camp | Cap. 6 | Completado |
+| 06 | `slice-06-world` | world | Cap. 5 | **Próximo** |
 | 07 | `slice-07-fauna` | survival + world | Cap. 3/5 | Pendiente |
 | 08 | `slice-08-quests` | quests | Cap. 8 | Pendiente |
 | 09 | `slice-09-helpers` | helpers | §2.13 | Pendiente |

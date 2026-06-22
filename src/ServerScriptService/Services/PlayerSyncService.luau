@@ -63,11 +63,15 @@ function PlayerSyncService.syncRecipesToClient(player: Player, data: PlayerProfi
 	Networking.getEvent("RecipesUpdatedEvent"):FireClient(player, buildRecipesSnapshot(data))
 end
 
+function PlayerSyncService.syncCampToClient(player: Player, data: PlayerProfileTypes.PlayerProfile)
+	Networking.getEvent("CampUpdatedEvent"):FireClient(player, buildCampSnapshot(data))
+end
+
 function PlayerSyncService.syncToClient(player: Player, data: PlayerProfileTypes.PlayerProfile)
 	PlayerSyncService.syncSurvivalToClient(player, data)
 	PlayerSyncService.syncInventoryToClient(player, data)
 	PlayerSyncService.syncRecipesToClient(player, data)
-	Networking.getEvent("CampUpdatedEvent"):FireClient(player, buildCampSnapshot(data))
+	PlayerSyncService.syncCampToClient(player, data)
 	Networking.getEvent("QuestProgressEvent"):FireClient(player, buildQuestSnapshot(data))
 	Logger.debug("PlayerSyncService", `Synced domain state to {player.Name}`)
 end

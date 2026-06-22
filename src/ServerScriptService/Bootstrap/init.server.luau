@@ -59,7 +59,7 @@ local function configurePersistence()
 
 		Logger.warn(
 			"Bootstrap",
-			"Studio API Services disabled — locale/inventory will NOT persist between Play sessions. "
+			"Studio API Services disabled — inventory, camp structures, and locale will NOT persist between Play sessions. "
 				.. "Enable in Home > Game Settings > Security > 'Enable Studio Access to API Services', then restart Studio."
 		)
 	end)

@@ -1,12 +1,12 @@
 # Crafting — Technical Spec
 
-**Status:** Implemented (slice-04, tutorial hands recipes)  
+**Status:** Implemented (slice-04 hands; slice-05 camp stations)  
 **GDD:** Cap. 4  
 **Service:** CraftingService
 
 ## Purpose
 
-Recipes, craft stations, experimentation, blueprint output. v0.1 ships tutorial `hands` recipes only.
+Recipes, craft stations, experimentation, blueprint output.
 
 ## Requirements
 
@@ -29,11 +29,11 @@ The system SHALL unlock all recipes with `unlockType == "tutorial"` into `Player
 
 - GIVEN a new profile with empty `recipes.unlocked`
 - WHEN the player data loads on the server
-- THEN `recipe_sparks`, `recipe_tinder`, `recipe_bandage`, and `recipe_campfire` are in `recipes.unlocked`
+- THEN `recipe_sparks`, `recipe_tinder`, `recipe_bandage`, `recipe_campfire`, `recipe_craft_table`, and `recipe_chest` are in `recipes.unlocked`
 
 ### Requirement: Server-authoritative craft
 
-The system SHALL process `CraftItemEvent` on the server. The client MUST send only `recipeId`. The server MUST validate unlock, station, inputs, output capacity, and cooldown before mutating inventory.
+The system SHALL process `CraftItemEvent` on the server. The client MUST send only `recipeId`. The server MUST validate unlock, station (including camp proximity for `craft_table` and `campfire`), inputs, output capacity, and cooldown before mutating inventory.
 
 #### Scenario: Successful craft
 
@@ -59,7 +59,7 @@ The system SHALL process `CraftItemEvent` on the server. The client MUST send on
 #### Scenario: Wrong station rejected
 
 - GIVEN a recipe requires station `craft_table`
-- WHEN the client fires `CraftItemEvent` in slice-04 (no camp station)
+- WHEN the player is not within range of their craft table
 - THEN the request is rejected with reason key `craft.error.wrong_station`
 
 ### Requirement: Craft cooldown
@@ -82,8 +82,45 @@ The server SHALL fire `RecipesUpdatedEvent` with `{ unlocked }` after profile lo
 - WHEN sync runs
 - THEN the client receives `RecipesUpdatedEvent` with the unlocked list
 
+### Requirement: Camp craft stations
+
+The system SHALL allow crafting at station `craft_table` when the player is within **12 studs** of their own placed `bp_craft_table` on their assigned plot, and at station `campfire` when within **8 studs** of their own placed `bp_campfire`.
+
+#### Scenario: Craft at craft table
+
+- GIVEN a player has `recipe_chest` unlocked and stands within 12 studs of their craft table
+- WHEN the client fires `CraftItemEvent` with `recipe_chest`
+- THEN the craft proceeds if other validations pass
+
+#### Scenario: Craft table too far
+
+- GIVEN a recipe requires station `craft_table`
+- WHEN the player is not within range of their craft table
+- THEN the request is rejected with reason key `craft.error.wrong_station`
+
+### Requirement: Starter construction recipes
+
+The system SHALL define `recipe_craft_table` and `recipe_chest` in `Recipes.luau` with station `craft_table` / `hands` and outputs `bp_craft_table` / `bp_chest`.
+
+#### Scenario: Craft table recipe exists
+
+- GIVEN `recipe_craft_table` is loaded
+- WHEN inputs are checked
+- THEN recipe requires wood and stone per GDD starter construction table
+
+### Requirement: Starter recipe unlock on camp level 1
+
+The system SHALL unlock all recipes with `unlockType == "starter"` into `PlayerProfile.recipes.unlocked` when `camp.level` reaches 1 if not already present.
+
+#### Scenario: Level 1 unlocks starter set
+
+- GIVEN camp level transitions to 1
+- WHEN level recalculation completes
+- THEN starter recipes are added to `recipes.unlocked` if any exist
+- AND `RecipesUpdatedEvent` fires
+
 ## Related
 
 - [inventory/spec.md](../inventory/spec.md) — consume/grant items
 - [ui/spec.md](../ui/spec.md) — crafting panel
-- [camp/spec.md](../camp/spec.md) — craft stations (slice-05)
+- [camp/spec.md](../camp/spec.md) — craft stations and plot

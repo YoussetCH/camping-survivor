@@ -28,6 +28,8 @@ export type PlayerProfileTemplate = {
 	camp: {
 		plotId: string?,
 		level: number,
+		structures: {},
+		chests: {},
 	},
 	recipes: {
 		unlocked: { string },
@@ -67,6 +69,8 @@ local PlayerProfileTemplate: PlayerProfileTemplate = {
 	camp = {
 		plotId = nil,
 		level = 0,
+		structures = {},
+		chests = {},
 	},
 	recipes = {
 		unlocked = {},

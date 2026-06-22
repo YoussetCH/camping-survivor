@@ -94,6 +94,27 @@ local definitions: { [string]: ItemTypes.ItemDefinition } = {
 		maxStack = 1,
 		iconAssetId = 91432023295936,
 	},
+	bp_chest = {
+		id = "bp_chest",
+		nameKey = "item.bp_chest.name",
+		category = "blueprint",
+		maxStack = 1,
+		iconAssetId = 91432023295936,
+	},
+	bp_craft_table = {
+		id = "bp_craft_table",
+		nameKey = "item.bp_craft_table.name",
+		category = "blueprint",
+		maxStack = 1,
+		iconAssetId = 91432023295936,
+	},
+	rope = {
+		id = "rope",
+		nameKey = "item.rope.name",
+		category = "processed",
+		maxStack = 20,
+		iconAssetId = 104267172186105,
+	},
 }
 
 local Items: ItemsModule = {}

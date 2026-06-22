@@ -1,14 +1,4 @@
-# Camp — Technical Spec
-
-**Status:** Implemented (slice-05, starter structures level 0→1)  
-**GDD:** Cap. 6  
-**Service:** CampService
-
-## Purpose
-
-Plot assignment, structure placement, camp level, camp chest storage, structure persistence.
-
-## Requirements
+## ADDED Requirements
 
 ### Requirement: Camp plot assignment
 
@@ -120,9 +110,3 @@ The system SHALL enforce a maximum of **10** placed structures when `camp.level`
 - GIVEN a player already has 10 structures on their plot
 - WHEN they attempt to place an 11th
 - THEN the request is rejected with reason key `camp.error.structure_cap`
-
-## Related
-
-- [crafting/spec.md](../crafting/spec.md) — camp craft stations
-- [inventory/spec.md](../inventory/spec.md) — chest transfer
-- [ui/spec.md](../ui/spec.md) — build mode and chest UI

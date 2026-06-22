@@ -39,6 +39,10 @@ function ClientSyncController:GetRecipes(): CraftingTypes.RecipesSnapshot?
 	return latestRecipes
 end
 
+function ClientSyncController:Start()
+	Networking.getEvent("ClientReadyEvent"):FireServer()
+end
+
 function ClientSyncController:Init()
 	local trove = self:GetTrove()
 
@@ -53,6 +57,14 @@ function ClientSyncController:Init()
 	end)
 
 	trove:Connect(Networking.getEvent("CampUpdatedEvent").OnClientEvent, function(snapshot: CampTypes.CampSnapshot)
+		if type(snapshot.structures) ~= "table" then
+			snapshot.structures = {}
+		end
+
+		if type(snapshot.chests) ~= "table" then
+			snapshot.chests = {}
+		end
+
 		latestCamp = snapshot
 		Logger.debug("ClientSyncController", "Received camp sync")
 	end)
@@ -68,6 +80,35 @@ function ClientSyncController:Init()
 	end)
 
 	trove:Connect(Networking.getEvent("PlayerDataLoadedEvent").OnClientEvent, function(profileData: PlayerProfileTypes.PlayerProfile)
+		if type(profileData.survival) == "table" then
+			latestSurvival = {
+				stats = profileData.survival,
+				statusEffects = profileData.statusEffects,
+			}
+		end
+
+		if type(profileData.inventory) == "table" then
+			latestInventory = {
+				inventory = profileData.inventory,
+				hotbar = if type(profileData.hotbar) == "table" then profileData.hotbar else { nil, nil, nil, nil, nil, nil },
+				equipped = if type(profileData.equipped) == "table" then profileData.equipped else { toolItemId = nil, coatItemId = nil },
+			}
+		end
+
+		if type(profileData.camp) == "table" then
+			local camp = profileData.camp :: CampTypes.CampSnapshot
+
+			if type(camp.structures) ~= "table" then
+				camp.structures = {}
+			end
+
+			if type(camp.chests) ~= "table" then
+				camp.chests = {}
+			end
+
+			latestCamp = camp
+		end
+
 		if type(profileData.recipes) == "table" and type(profileData.recipes.unlocked) == "table" then
 			latestRecipes = {
 				unlocked = profileData.recipes.unlocked,

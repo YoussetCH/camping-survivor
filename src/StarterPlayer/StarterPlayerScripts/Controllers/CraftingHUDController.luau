@@ -2,6 +2,7 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local BaseController = require(script.Parent.Parent.Kernel.BaseController)
@@ -11,7 +12,9 @@ local Items = require(ReplicatedStorage.Shared.Constants.Items)
 local Localization = require(ReplicatedStorage.Shared.Localization.Localization)
 local Networking = require(ReplicatedStorage.Shared.Networking.Networking)
 local Recipes = require(ReplicatedStorage.Shared.Constants.Recipes)
+local StructuresConstants = require(ReplicatedStorage.Shared.Constants.StructuresConstants)
 local ItemIcon = require(ReplicatedStorage.Shared.UI.ItemIcon)
+local CampProximity = require(ReplicatedStorage.Shared.Utilities.CampProximity)
 local CraftingTypes = require(ReplicatedStorage.Shared.Types.Crafting)
 local RecipeTypes = require(ReplicatedStorage.Shared.Types.Recipe)
 
@@ -63,11 +66,52 @@ local function isRecipeUnlocked(recipeId: string): boolean
 	return false
 end
 
+local function isNearCampStation(station: string): boolean
+	local syncController = ClientKernel.getController("ClientSyncController")
+	local camp = if syncController ~= nil then syncController:GetCamp() else nil
+	local character = Players.LocalPlayer.Character
+	local root = if character ~= nil then character:FindFirstChild("HumanoidRootPart") else nil
+
+	if camp == nil or camp.plotId == nil or root == nil or not root:IsA("BasePart") then
+		return false
+	end
+
+	local plotFolder = CampProximity.findPlotStructureFolder(camp.plotId)
+
+	if plotFolder ~= nil and CampProximity.isNearStationInFolder(root.Position, plotFolder, station, Players.LocalPlayer.UserId) then
+		return true
+	end
+
+	local range = CampProximity.getStationRange(station)
+
+	for _, structure in camp.structures do
+		local definition = StructuresConstants.get(structure.blueprintId)
+
+		if definition ~= nil and definition.station == station then
+			local position = CampProximity.toVector3(structure.position)
+
+			if position ~= nil and CampProximity.horizontalDistance(root.Position, position) <= range then
+				return true
+			end
+		end
+	end
+
+	return false
+end
+
+local function canCraftRecipe(recipe: RecipeTypes.RecipeDefinition): boolean
+	if CraftingConstants.isHandsStation(recipe.station) then
+		return true
+	end
+
+	return isNearCampStation(recipe.station)
+end
+
 local function getVisibleRecipes(): { RecipeTypes.RecipeDefinition }
 	local visible: { RecipeTypes.RecipeDefinition } = {}
 
 	for _, recipe in Recipes.getAll() do
-		if recipe.station == CraftingConstants.HANDS_STATION and isRecipeUnlocked(recipe.id) then
+		if isRecipeUnlocked(recipe.id) then
 			table.insert(visible, recipe)
 		end
 	end
@@ -185,7 +229,20 @@ local function renderRecipeList()
 		nameLabel.TextSize = 13
 		nameLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
 		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-		nameLabel.Text = getLocalizedName(recipe.nameKey)
+		local labelText = getLocalizedName(recipe.nameKey)
+
+		if not canCraftRecipe(recipe) then
+			if recipe.station == CraftingConstants.CRAFT_TABLE_STATION then
+				labelText ..= ` ({Localization.get("ui.craft.at_craft_table")})`
+			elseif recipe.station == CraftingConstants.CAMPFIRE_STATION then
+				labelText ..= ` ({Localization.get("ui.craft.at_campfire")})`
+			end
+			nameLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+		else
+			nameLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+		end
+
+		nameLabel.Text = labelText
 		nameLabel.LayoutOrder = 2
 		nameLabel.Parent = button
 
@@ -205,15 +262,30 @@ local function setPanelVisible(visible: boolean)
 	end
 end
 
+function CraftingHUDController:ClosePanel()
+	setPanelVisible(false)
+end
+
 local function togglePanel()
 	if panelFrame ~= nil then
 		panelFrame.Visible = not panelFrame.Visible
+
+		if panelFrame.Visible then
+			renderRecipeList()
+		end
 	end
 end
 
 local function requestCraft()
 	if selectedRecipeId == nil then
 		showToast("craft.error.select_recipe")
+		return
+	end
+
+	local recipe = Recipes.get(selectedRecipeId)
+
+	if recipe ~= nil and not canCraftRecipe(recipe) then
+		showToast("craft.error.wrong_station")
 		return
 	end
 
@@ -433,6 +505,22 @@ end
 
 function CraftingHUDController:Start()
 	local trove = self:GetTrove()
+	local lastStationRefreshAt = 0
+
+	trove:Connect(RunService.Heartbeat, function()
+		if panelFrame == nil or not panelFrame.Visible then
+			return
+		end
+
+		local now = os.clock()
+
+		if now - lastStationRefreshAt < 0.4 then
+			return
+		end
+
+		lastStationRefreshAt = now
+		renderRecipeList()
+	end)
 
 	trove:Connect(Localization.LocaleChanged, function()
 		if titleLabel ~= nil then
@@ -448,6 +536,9 @@ function CraftingHUDController:Start()
 
 	trove:Connect(Networking.getEvent("RecipesUpdatedEvent").OnClientEvent, onRecipesUpdated)
 	trove:Connect(Networking.getEvent("CraftResultEvent").OnClientEvent, onCraftResult)
+	trove:Connect(Networking.getEvent("CampUpdatedEvent").OnClientEvent, function()
+		renderRecipeList()
+	end)
 
 	local syncController = ClientKernel.getController("ClientSyncController")
 

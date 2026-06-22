@@ -66,6 +66,32 @@ function CraftingService.ensureTutorialRecipesUnlocked(player: Player, data: Pla
 	return changed
 end
 
+function CraftingService.ensureStarterRecipesUnlocked(player: Player, data: PlayerProfileTypes.PlayerProfile): boolean
+	normalizeRecipes(data)
+
+	local changed = false
+	local unlockedSet: { [string]: boolean } = {}
+
+	for _, recipeId in data.recipes.unlocked do
+		unlockedSet[recipeId] = true
+	end
+
+	for _, recipe in Recipes.getAll() do
+		if recipe.unlockType == "starter" and unlockedSet[recipe.id] ~= true then
+			table.insert(data.recipes.unlocked, recipe.id)
+			unlockedSet[recipe.id] = true
+			changed = true
+		end
+	end
+
+	if changed then
+		PlayerSyncService.syncRecipesToClient(player, data)
+		PlayerDataService:SaveProfile(player)
+	end
+
+	return changed
+end
+
 local function fireCraftResult(player: Player, payload: CraftingTypes.CraftResultPayload)
 	Networking.getEvent("CraftResultEvent"):FireClient(player, payload)
 end
@@ -120,13 +146,17 @@ local function craftItem(player: Player, recipeId: unknown)
 		return
 	end
 
-	if not CraftingConstants.isStationAvailable(recipe.station) then
-		fireCraftResult(player, {
-			success = false,
-			recipeId = recipeId,
-			reasonKey = "craft.error.wrong_station",
-		})
-		return
+	if not CraftingConstants.isHandsStation(recipe.station) then
+		local CampService = require(ServerScriptService.Services.CampService)
+
+		if not CampService.isPlayerNearStation(player, recipe.station) then
+			fireCraftResult(player, {
+				success = false,
+				recipeId = recipeId,
+				reasonKey = "craft.error.wrong_station",
+			})
+			return
+		end
 	end
 
 	if not hasRecipeInputs(data, recipe) then

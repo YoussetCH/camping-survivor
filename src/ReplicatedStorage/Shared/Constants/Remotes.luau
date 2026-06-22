@@ -3,6 +3,7 @@
 local Remotes = {
 	Events = {
 		"PlayerDataLoadedEvent",
+		"ClientReadyEvent",
 		"SurvivalUpdatedEvent",
 		"InventoryUpdatedEvent",
 		"CampUpdatedEvent",
@@ -15,6 +16,13 @@ local Remotes = {
 		"CraftItemEvent",
 		"CraftResultEvent",
 		"RecipesUpdatedEvent",
+		"PlaceStructureEvent",
+		"PlaceStructureResultEvent",
+		"DemolishStructureEvent",
+		"DemolishStructureResultEvent",
+		"MoveStructureEvent",
+		"MoveStructureResultEvent",
+		"TransferItemEvent",
 	},
 	Functions = {},
 }

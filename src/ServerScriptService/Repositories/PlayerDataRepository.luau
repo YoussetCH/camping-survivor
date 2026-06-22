@@ -8,6 +8,7 @@ local DataStoreNames = require(ReplicatedStorage.Shared.Constants.DataStoreNames
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local PlayerProfileTemplate = require(ReplicatedStorage.Shared.Constants.PlayerProfileTemplate)
 local PlayerProfileTypes = require(ReplicatedStorage.Shared.Types.PlayerProfile)
+local CampRepository = require(ServerScriptService.Repositories.CampRepository)
 
 local ProfileStore = require(ServerScriptService.Packages.ProfileStore)
 
@@ -94,6 +95,12 @@ function PlayerDataRepository:SaveProfile(player: Player): boolean
 
 	if profile == nil or profile:IsActive() ~= true then
 		return false
+	end
+
+	local data = profile.Data :: PlayerProfileTypes.PlayerProfile
+
+	if type(data.camp) == "table" then
+		CampRepository.prepareForPersistence(data.camp)
 	end
 
 	profile:Save()

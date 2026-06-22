@@ -15,12 +15,14 @@ export type LoadedController = {
 local ClientKernel = {}
 
 local INIT_ORDER = {
+	"ClientSyncController",
 	"LocalizationController",
 	"SurvivalHUDController",
 	"InventoryHUDController",
 	"CraftingHUDController",
+	"BuildingController",
+	"ChestController",
 	"UIController",
-	"ClientSyncController",
 }
 
 local loadedControllers: { LoadedController } = {}

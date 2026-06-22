@@ -100,6 +100,14 @@ local function teleportToSpawn(player: Player)
 		return
 	end
 
+	local data = PlayerDataService:GetData(player)
+
+	if data ~= nil and data.camp.plotId ~= nil then
+		local CampService = require(ServerScriptService.Services.CampService)
+		CampService.teleportPlayerToPlot(player, data.camp.plotId)
+		return
+	end
+
 	local spawnLocation = workspace:FindFirstChildOfClass("SpawnLocation")
 
 	if spawnLocation ~= nil then

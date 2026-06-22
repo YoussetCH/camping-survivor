@@ -48,6 +48,22 @@ local function normalizeSettings(data: PlayerProfileTypes.PlayerProfile)
 	end
 end
 
+local function onClientReady(player: Player)
+	if repository == nil then
+		return
+	end
+
+	local data = repository:GetData(player)
+
+	if data == nil then
+		return
+	end
+
+	Networking.getEvent("PlayerDataLoadedEvent"):FireClient(player, data)
+	PlayerSyncService.syncToClient(player, data)
+	Logger.debug("PlayerDataService", `Re-synced profile for {player.Name} after client ready`)
+end
+
 local function onPlayerAdded(player: Player)
 	if repository == nil then
 		return
@@ -64,6 +80,10 @@ local function onPlayerAdded(player: Player)
 	if data ~= nil then
 		normalizeSettings(data)
 		normalizeInventory(data)
+
+		local CraftingService = require(ServerScriptService.Services.CraftingService)
+		CraftingService.ensureTutorialRecipesUnlocked(player, data)
+
 		Networking.getEvent("PlayerDataLoadedEvent"):FireClient(player, data)
 		PlayerSyncService.syncToClient(player, data)
 	end
@@ -84,6 +104,7 @@ function PlayerDataService:Init()
 
 	trove:Connect(Players.PlayerAdded, onPlayerAdded)
 	trove:Connect(Players.PlayerRemoving, onPlayerRemoving)
+	trove:Connect(Networking.getEvent("ClientReadyEvent").OnServerEvent, onClientReady)
 
 	for _, player in Players:GetPlayers() do
 		task.spawn(onPlayerAdded, player)
