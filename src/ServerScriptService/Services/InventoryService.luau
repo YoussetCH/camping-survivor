@@ -10,6 +10,7 @@ local InventoryConstants = require(ReplicatedStorage.Shared.Constants.InventoryC
 local Items = require(ReplicatedStorage.Shared.Constants.Items)
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local Networking = require(ReplicatedStorage.Shared.Networking.Networking)
+local StatusEffectConstants = require(ReplicatedStorage.Shared.Constants.StatusEffectConstants)
 local SurvivalConstants = require(ReplicatedStorage.Shared.Constants.SurvivalConstants)
 local InventoryTypes = require(ReplicatedStorage.Shared.Types.Inventory)
 local PlayerProfileTypes = require(ReplicatedStorage.Shared.Types.PlayerProfile)
@@ -421,8 +422,15 @@ local function setHotbarSlot(player: Player, hotbarIndex: unknown, bagSlotKey: u
 	syncInventory(player, data)
 end
 
+local function fireUseResult(player: Player, success: boolean, reasonKey: string)
+	Networking.getEvent("UseItemResultEvent"):FireClient(player, {
+		success = success,
+		reasonKey = reasonKey,
+	})
+end
+
 local function useItem(player: Player, bagSlotKey: unknown)
-	if type(bagSlotKey) ~= "string" or not canPerformAction(player) then
+	if type(bagSlotKey) ~= "string" or not InventoryTypes.isValidBagSlotKey(bagSlotKey) then
 		return
 	end
 
@@ -435,14 +443,66 @@ local function useItem(player: Player, bagSlotKey: unknown)
 	local slotItem = getBagItem(data, bagSlotKey)
 
 	if slotItem == nil then
+		fireUseResult(player, false, "item.use.error.missing_item")
+		return
+	end
+
+	if slotItem.itemId ~= "bandage" and slotItem.itemId ~= "antidote" then
+		fireUseResult(player, false, "item.use.error.unusable")
+		return
+	end
+
+	if not canPerformAction(player) then
 		return
 	end
 
 	if slotItem.itemId == "bandage" then
-		data.survival.health = math.clamp(data.survival.health + InventoryConstants.BANDAGE_HEAL_AMOUNT, 0, 100)
+		for index = #data.statusEffects, 1, -1 do
+			if data.statusEffects[index].id == "bleeding" then
+				table.remove(data.statusEffects, index)
+			end
+		end
+
+		data.survival.health = math.clamp(data.survival.health + StatusEffectConstants.BANDAGE_HEAL_AMOUNT, 0, 100)
 		InventoryService.removeFromBagSlot(player, data, bagSlotKey, 1)
 		PlayerSyncService.syncSurvivalToClient(player, data)
+		fireUseResult(player, true, "item.use.bandage.success")
 		return
+	end
+
+	if slotItem.itemId == "antidote" then
+		local hadPoison = false
+
+		for index = #data.statusEffects, 1, -1 do
+			if data.statusEffects[index].id == "poison" then
+				hadPoison = true
+				table.remove(data.statusEffects, index)
+			end
+		end
+
+		data.survival.health = math.clamp(data.survival.health + StatusEffectConstants.ANTIDOTE_HEAL_AMOUNT, 0, 100)
+		InventoryService.removeFromBagSlot(player, data, bagSlotKey, 1)
+		PlayerSyncService.syncSurvivalToClient(player, data)
+		fireUseResult(player, true, if hadPoison then "item.use.antidote.cured" else "item.use.antidote.healed")
+		return
+	end
+end
+
+local function grantStudioMedicineSupplies(player: Player, data: PlayerProfileTypes.PlayerProfile)
+	if not RunService:IsStudio() then
+		return
+	end
+
+	if InventoryService.countItem(data, "antidote") < 1 then
+		InventoryService.grantItem(player, "antidote", 2)
+	end
+
+	if InventoryService.countItem(data, "bandage") < 1 then
+		InventoryService.grantItem(player, "bandage", 2)
+	end
+
+	if InventoryService.countItem(data, "herb_common") < 1 then
+		InventoryService.grantItem(player, "herb_common", 2)
 	end
 end
 
@@ -457,20 +517,23 @@ local function grantStudioStarterItems(player: Player)
 		return
 	end
 
-	if #InventoryTypes.getOccupiedBagKeys(data.inventory) > 0 then
+	if #InventoryTypes.getOccupiedBagKeys(data.inventory) == 0 then
+		InventoryService.grantItem(player, "stick", 5)
+		InventoryService.grantItem(player, "flint", 2)
+		InventoryService.grantItem(player, "leaf", 4)
+		InventoryService.grantItem(player, "fiber", 4)
+		InventoryService.grantItem(player, "wood", 16)
+		InventoryService.grantItem(player, "stone", 4)
+		InventoryService.grantItem(player, "rope", 2)
+		InventoryService.grantItem(player, "bandage", 3)
+		InventoryService.grantItem(player, "antidote", 2)
+		InventoryService.grantItem(player, "herb_common", 2)
+		InventoryService.grantItem(player, "stone_axe", 1)
+		Logger.info("InventoryService", `Granted studio starter items to {player.Name}`)
 		return
 	end
 
-	InventoryService.grantItem(player, "stick", 5)
-	InventoryService.grantItem(player, "flint", 2)
-	InventoryService.grantItem(player, "leaf", 4)
-	InventoryService.grantItem(player, "fiber", 4)
-	InventoryService.grantItem(player, "wood", 16)
-	InventoryService.grantItem(player, "stone", 4)
-	InventoryService.grantItem(player, "rope", 2)
-	InventoryService.grantItem(player, "bandage", 3)
-	InventoryService.grantItem(player, "stone_axe", 1)
-	Logger.info("InventoryService", `Granted studio starter items to {player.Name}`)
+	grantStudioMedicineSupplies(player, data)
 end
 
 local function onPlayerAdded(player: Player)

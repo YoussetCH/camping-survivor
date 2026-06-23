@@ -27,6 +27,8 @@ local FeatureBootstrap: FeatureBootstrapModule = {
 		require(script.Parent.Behaviors.CampfireBehavior)
 		require(script.Parent.Behaviors.CraftTableBehavior)
 		require(script.Parent.Behaviors.ChestBehavior)
+
+		require(script.Parent.FaunaBootstrap).init()
 	end,
 	bindCampSync = function(syncCamp)
 		ChestBehavior.setSyncCamp(syncCamp)

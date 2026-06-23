@@ -48,6 +48,19 @@ local definitions: { [string]: RecipeTypes.RecipeDefinition } = {
 			{ itemId = "bandage", quantity = 2 },
 		},
 	},
+	recipe_antidote = {
+		id = "recipe_antidote",
+		nameKey = "recipe.recipe_antidote.name",
+		unlockType = "tutorial",
+		station = "hands",
+		inputs = {
+			{ itemId = "herb_common", quantity = 1 },
+			{ itemId = "berry", quantity = 2 },
+		},
+		outputs = {
+			{ itemId = "antidote", quantity = 1 },
+		},
+	},
 	recipe_campfire = {
 		id = "recipe_campfire",
 		nameKey = "recipe.recipe_campfire.name",

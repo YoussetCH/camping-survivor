@@ -26,6 +26,13 @@ local en: LocaleTypes.LocaleTable = {
 	["item.tinder.name"] = "Tinder",
 	["item.berry.name"] = "Berries",
 	["item.bandage.name"] = "Bandage",
+	["item.antidote.name"] = "Antidote",
+	["item.use.bandage.success"] = "Bandage used — bleeding stopped, +10 HP.",
+	["item.use.antidote.cured"] = "Antidote used — poison cured, +15 HP.",
+	["item.use.antidote.healed"] = "Antidote used — +15 HP.",
+	["item.use.error.unusable"] = "This item cannot be used.",
+	["item.use.error.missing_item"] = "That item is no longer in your inventory.",
+	["item.herb_common.name"] = "Common Herb",
 	["item.sparks.name"] = "Sparks",
 	["item.wood.name"] = "Wood",
 	["item.stone_axe.name"] = "Stone Axe",
@@ -57,6 +64,7 @@ local en: LocaleTypes.LocaleTable = {
 	["recipe.recipe_sparks.name"] = "Sparks",
 	["recipe.recipe_tinder.name"] = "Tinder",
 	["recipe.recipe_bandage.name"] = "Bandage",
+	["recipe.recipe_antidote.name"] = "Antidote",
 	["recipe.recipe_campfire.name"] = "Campfire",
 	["recipe.recipe_craft_table.name"] = "Craft Table",
 	["recipe.recipe_chest.name"] = "Camp Chest",
@@ -114,6 +122,23 @@ local en: LocaleTypes.LocaleTable = {
 	["ui.world.phase.night"] = "Night",
 	["ui.world.phase.dawn"] = "Dawn",
 	["ui.world.phase.dusk"] = "Dusk",
+
+	["status.bleeding.name"] = "Bleeding",
+	["status.poison.name"] = "Poison",
+	["status.infection.name"] = "Infection",
+	["status.bleeding.hint"] = "Open inventory (I) and use a Bandage.",
+	["status.poison.hint"] = "Use Antidote (I) — stops poison and restores +15 HP.",
+	["status.infection.hint"] = "Use a Bandage — disinfectant coming soon.",
+
+	["fauna.wolf.name"] = "Wolf",
+	["fauna.snake.name"] = "Snake",
+
+	["combat.error.no_tool"] = "Equip a tool to attack.",
+	["combat.error.wrong_tool"] = "Equip your stone axe to attack fauna.",
+	["combat.error.no_target"] = "No fauna nearby — get closer and face the target.",
+	["combat.hint.snake"] = "Equip axe, click the snake twice (15 HP).",
+	["combat.hint.mobile"] = "Tap fauna or press Attack. Desktop: F key.",
+	["ui.combat.attack"] = "Attack",
 }
 
 return en

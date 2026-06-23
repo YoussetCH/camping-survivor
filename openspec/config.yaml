@@ -126,7 +126,7 @@ conventions:
   server_features_path: src/ServerScriptService/Features/
 
 workflow:
-  active_change: null
+  active_change: openspec/changes/slice-07-fauna
   one_slice_at_a_time: true
   archive_path: openspec/changes/archive
   schema_path: openspec/schemas/roblox-slice/schema.yaml

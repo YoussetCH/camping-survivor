@@ -66,6 +66,20 @@ local definitions: { [string]: ItemTypes.ItemDefinition } = {
 		maxStack = 10,
 		iconAssetId = 75635417626973,
 	},
+	antidote = {
+		id = "antidote",
+		nameKey = "item.antidote.name",
+		category = "medicine",
+		maxStack = 10,
+		iconAssetId = 75635417626973,
+	},
+	herb_common = {
+		id = "herb_common",
+		nameKey = "item.herb_common.name",
+		category = "raw",
+		maxStack = 20,
+		iconAssetId = 115900584628312,
+	},
 	sparks = {
 		id = "sparks",
 		nameKey = "item.sparks.name",

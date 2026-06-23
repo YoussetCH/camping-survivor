@@ -27,6 +27,9 @@ local selectedBagSlotKey: string? = nil
 local latestSnapshot: PlayerProfileTypes.InventorySnapshot? = nil
 local equipButton: TextButton? = nil
 local unequipButton: TextButton? = nil
+local useButton: TextButton? = nil
+local useToastLabel: TextLabel? = nil
+local useToastToken = 0
 
 local PANEL_DISPLAY_ORDER = 105
 local PANEL_OPEN_DISPLAY_ORDER = 115
@@ -115,6 +118,43 @@ local function canUnequip(): boolean
 	return hasEquippedTool()
 end
 
+local function isUsableItem(itemId: string): boolean
+	local definition = Items.get(itemId)
+
+	if definition == nil then
+		return false
+	end
+
+	return definition.category == "medicine" or definition.category == "food"
+end
+
+local function canUseSelected(): boolean
+	local item = getSelectedItem()
+
+	if item == nil then
+		return false
+	end
+
+	return isUsableItem(item.itemId)
+end
+
+local function showUseToast(messageKey: string)
+	if useToastLabel == nil then
+		return
+	end
+
+	useToastToken += 1
+	local currentToken = useToastToken
+	useToastLabel.Text = Localization.get(messageKey)
+	useToastLabel.Visible = true
+
+	task.delay(2.5, function()
+		if useToastToken == currentToken and useToastLabel ~= nil then
+			useToastLabel.Visible = false
+		end
+	end)
+end
+
 local function setActionButtonEnabled(button: TextButton?, enabled: boolean)
 	if button == nil then
 		return
@@ -127,6 +167,11 @@ local function setActionButtonEnabled(button: TextButton?, enabled: boolean)
 end
 
 local function refreshActionButtons()
+	if useButton ~= nil then
+		useButton.Text = Localization.get("ui.inventory.use")
+		setActionButtonEnabled(useButton, canUseSelected())
+	end
+
 	if equipButton ~= nil then
 		equipButton.Text = Localization.get("ui.inventory.equip")
 		setActionButtonEnabled(equipButton, canEquipSelected())
@@ -198,6 +243,15 @@ end
 local function requestUse(bagSlotKey: string?)
 	if bagSlotKey == nil then
 		return
+	end
+
+	if latestSnapshot ~= nil then
+		local item = latestSnapshot.inventory[bagSlotKey]
+
+		if item == nil or not isUsableItem(item.itemId) then
+			showUseToast("item.use.error.unusable")
+			return
+		end
 	end
 
 	Networking.getEvent("UseItemEvent"):FireServer(bagSlotKey)
@@ -441,7 +495,7 @@ function InventoryHUDController:Init()
 	actionsLayout.Padding = UDim.new(0, 8)
 	actionsLayout.Parent = actions
 
-	createActionButton(actions, "ui.inventory.use", 1, function()
+	useButton = createActionButton(actions, "ui.inventory.use", 1, function()
 		requestUse(selectedBagSlotKey)
 	end)
 
@@ -454,7 +508,26 @@ function InventoryHUDController:Init()
 	end)
 	unequipButton.Size = UDim2.fromOffset(84, 28)
 	equipButton.Size = UDim2.fromOffset(84, 28)
+	useButton.Size = UDim2.fromOffset(72, 28)
 	refreshActionButtons()
+
+	useToastLabel = Instance.new("TextLabel")
+	useToastLabel.AnchorPoint = Vector2.new(0.5, 1)
+	useToastLabel.Position = UDim2.new(0.5, 0, 1, -120)
+	useToastLabel.Size = UDim2.fromOffset(320, 32)
+	useToastLabel.BackgroundColor3 = Color3.fromRGB(20, 22, 28)
+	useToastLabel.BackgroundTransparency = 0.15
+	useToastLabel.BorderSizePixel = 0
+	useToastLabel.Font = Enum.Font.Gotham
+	useToastLabel.TextSize = 13
+	useToastLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+	useToastLabel.Visible = false
+	useToastLabel.ZIndex = 20
+	useToastLabel.Parent = gui
+
+	local useToastCorner = Instance.new("UICorner")
+	useToastCorner.CornerRadius = UDim.new(0, 8)
+	useToastCorner.Parent = useToastLabel
 
 	local toggleButton = Instance.new("TextButton")
 	toggleButton.Name = "ToggleInventory"
@@ -510,6 +583,18 @@ function InventoryHUDController:Init()
 
 	trove:Connect(Networking.getEvent("InventoryUpdatedEvent").OnClientEvent, function(snapshot: PlayerProfileTypes.InventorySnapshot)
 		renderSnapshot(snapshot)
+	end)
+
+	trove:Connect(Networking.getEvent("UseItemResultEvent").OnClientEvent, function(payload: { success: boolean?, reasonKey: string? })
+		if type(payload) ~= "table" then
+			return
+		end
+
+		local reasonKey = payload.reasonKey
+
+		if type(reasonKey) == "string" then
+			showUseToast(reasonKey)
+		end
 	end)
 
 	trove:Connect(Networking.getEvent("PlayerDataLoadedEvent").OnClientEvent, function(profileData: PlayerProfileTypes.PlayerProfile)

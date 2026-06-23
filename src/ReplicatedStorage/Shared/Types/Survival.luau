@@ -3,6 +3,7 @@
 export type StatusEffect = {
 	id: string,
 	expiresAt: number?,
+	appliedAt: number?,
 }
 
 export type SurvivalStats = {

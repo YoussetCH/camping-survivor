@@ -4,7 +4,7 @@
 > **Product spec:** [GDD-Camping-Survivor.md](./GDD-Camping-Survivor.md) v1.2  
 > **Idiomas:** English (default) · Español — extensible ([§1.11](./GDD-Camping-Survivor.md#111-localización-e-idiomas))
 > **Specs técnicas:** [`openspec/specs/`](../openspec/specs/)  
-> **Slice activo:** Ninguno — próximo `slice-07-fauna`  
+> **Slice activo:** `slice-07-fauna`  
 > **Último completado:** [`archive/2026-06-23-slice-06-world`](../openspec/changes/archive/2026-06-23-slice-06-world/)
 
 ## Workflow OpenSpec (Cursor)
@@ -36,9 +36,9 @@ openspec archive <name> -y
 openspec update    # refrescar comandos /opsx:* en Cursor
 ```
 
-**Change activo:** ninguno — crear con `/opsx:propose slice-07-fauna`
+**Change activo:** `slice-07-fauna` — fauna PvE + status effects
 
-**Siguiente slice planificado:** `slice-07-fauna`
+**Siguiente slice planificado:** `slice-08-quests` (tras archivar 07)
 
 ## Localización (cross-cutting, GDD v1.2)
 
@@ -62,7 +62,7 @@ openspec update    # refrescar comandos /opsx:* en Cursor
 | 05 | `slice-05-camp` | camp | Cap. 6 | Completado |
 | 05b | `slice-05b-feature-modules` | feature-modules + camp | Infra | Completado |
 | 06 | `slice-06-world` | world | Cap. 5 | Completado |
-| 07 | `slice-07-fauna` | survival + world | Cap. 3/5 | **Próximo** |
+| 07 | `slice-07-fauna` | survival + world | Cap. 3/5 | **En progreso** |
 | 08 | `slice-08-quests` | quests | Cap. 8 | Pendiente |
 | 09 | `slice-09-helpers` | helpers | §2.13 | Pendiente |
 | 10 | `slice-10-biomes-mid` | world + crafting | Cap. 5/4 | Pendiente |

@@ -68,6 +68,7 @@ end
 
 ensureDevWorld()
 WorldBootstrap.ensureDevWorld()
+WorldBootstrap.ensureFaunaSpawns()
 
 local services = ServerKernel.loadServices()
 

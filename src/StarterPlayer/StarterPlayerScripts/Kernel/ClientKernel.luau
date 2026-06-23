@@ -18,11 +18,13 @@ local INIT_ORDER = {
 	"ClientSyncController",
 	"LocalizationController",
 	"SurvivalHUDController",
+	"StatusEffectVisualController",
 	"InventoryHUDController",
 	"CraftingHUDController",
 	"BuildingController",
 	"ChestController",
 	"EquippedToolController",
+	"FaunaController",
 	"UIController",
 }
 

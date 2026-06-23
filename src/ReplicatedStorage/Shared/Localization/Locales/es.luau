@@ -26,6 +26,13 @@ local es: LocaleTypes.LocaleTable = {
 	["item.tinder.name"] = "Yesca",
 	["item.berry.name"] = "Bayas",
 	["item.bandage.name"] = "Vendaje",
+	["item.antidote.name"] = "Antídoto",
+	["item.use.bandage.success"] = "Vendaje usado — sangrado detenido, +10 HP.",
+	["item.use.antidote.cured"] = "Antídoto usado — veneno curado, +15 HP.",
+	["item.use.antidote.healed"] = "Antídoto usado — +15 HP.",
+	["item.use.error.unusable"] = "Este objeto no se puede usar.",
+	["item.use.error.missing_item"] = "Ese objeto ya no está en tu inventario.",
+	["item.herb_common.name"] = "Hierba común",
 	["item.sparks.name"] = "Chispas",
 	["item.wood.name"] = "Madera",
 	["item.stone_axe.name"] = "Hacha de piedra",
@@ -57,6 +64,7 @@ local es: LocaleTypes.LocaleTable = {
 	["recipe.recipe_sparks.name"] = "Chispas",
 	["recipe.recipe_tinder.name"] = "Yesca",
 	["recipe.recipe_bandage.name"] = "Vendaje",
+	["recipe.recipe_antidote.name"] = "Antídoto",
 	["recipe.recipe_campfire.name"] = "Fogata",
 	["recipe.recipe_craft_table.name"] = "Mesa de craft",
 	["recipe.recipe_chest.name"] = "Cofre",
@@ -114,6 +122,23 @@ local es: LocaleTypes.LocaleTable = {
 	["ui.world.phase.night"] = "Noche",
 	["ui.world.phase.dawn"] = "Amanecer",
 	["ui.world.phase.dusk"] = "Atardecer",
+
+	["status.bleeding.name"] = "Sangrado",
+	["status.poison.name"] = "Veneno",
+	["status.infection.name"] = "Infección",
+	["status.bleeding.hint"] = "Abre el inventario (I) y usa un Vendaje.",
+	["status.poison.hint"] = "Usa Antídoto (I) — quita el veneno y recupera +15 HP.",
+	["status.infection.hint"] = "Usa un Vendaje — desinfectante pronto.",
+
+	["fauna.wolf.name"] = "Lobo",
+	["fauna.snake.name"] = "Serpiente",
+
+	["combat.error.no_tool"] = "Equipa una herramienta para atacar.",
+	["combat.error.wrong_tool"] = "Equipa tu hacha de piedra para atacar fauna.",
+	["combat.error.no_target"] = "No hay fauna cerca — acércate y mira al objetivo.",
+	["combat.hint.snake"] = "Equipa el hacha y haz clic en la serpiente dos veces (15 HP).",
+	["combat.hint.mobile"] = "Toca la fauna o pulsa Atacar. En PC: tecla F.",
+	["ui.combat.attack"] = "Atacar",
 }
 
 return es

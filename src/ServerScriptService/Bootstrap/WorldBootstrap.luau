@@ -5,10 +5,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local ResourceNodeModelFactory = require(ReplicatedStorage.Shared.World.ResourceNodeModelFactory)
+local FaunaConstants = require(ReplicatedStorage.Shared.Constants.FaunaConstants)
 local WorldConstants = require(ReplicatedStorage.Shared.Constants.WorldConstants)
 
 export type WorldBootstrapModule = {
 	ensureDevWorld: () -> (),
+	ensureFaunaSpawns: () -> (),
 }
 
 local WorldBootstrap = {}
@@ -171,6 +173,49 @@ function WorldBootstrap.ensureDevWorld()
 	end
 
 	Logger.info("WorldBootstrap", `Dev world ready with {#nodeDefinitions} resource nodes`)
+end
+
+local function createFaunaSpawn(parent: Folder, name: string, speciesId: string, position: Vector3): BasePart
+	local existing = parent:FindFirstChild(name)
+
+	if existing ~= nil and existing:IsA("BasePart") then
+		return existing
+	end
+
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.Transparency = 1
+	part.Size = Vector3.new(2, 1, 2)
+	part.Position = position
+	part:SetAttribute(FaunaConstants.SPAWN_SPECIES_ATTRIBUTE, speciesId)
+	CollectionService:AddTag(part, FaunaConstants.FAUNA_SPAWN_TAG)
+	part.Parent = parent
+
+	return part
+end
+
+function WorldBootstrap.ensureFaunaSpawns()
+	local worldFolder = getWorldFolder()
+	local faunaSpawnsFolder = getSubfolder(worldFolder, "FaunaSpawns")
+	getSubfolder(worldFolder, "Fauna")
+
+	local spawnDefinitions = {
+		{ name = "wolf_spawn_01", speciesId = "wolf", position = Vector3.new(280, 0, 80) },
+		{ name = "wolf_spawn_02", speciesId = "wolf", position = Vector3.new(320, 0, 50) },
+		{ name = "wolf_spawn_03", speciesId = "wolf", position = Vector3.new(-100, 0, 80) },
+		{ name = "snake_spawn_01", speciesId = "snake", position = Vector3.new(240, 0, 20) },
+		{ name = "snake_spawn_02", speciesId = "snake", position = Vector3.new(-60, 0, 20) },
+	}
+
+	for _, spawnInfo in spawnDefinitions do
+		createFaunaSpawn(faunaSpawnsFolder, spawnInfo.name, spawnInfo.speciesId, spawnInfo.position)
+	end
+
+	Logger.info("WorldBootstrap", `Fauna spawns ready with {#spawnDefinitions} markers`)
 end
 
 return WorldBootstrap

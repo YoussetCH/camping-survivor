@@ -11,6 +11,7 @@ local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local InventoryService = require(ServerScriptService.Services.InventoryService)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 local PlayerSyncService = require(ServerScriptService.Services.PlayerSyncService)
+local StatusEffectConstants = require(ReplicatedStorage.Shared.Constants.StatusEffectConstants)
 local SurvivalConstants = require(ReplicatedStorage.Shared.Constants.SurvivalConstants)
 local PlayerProfileTypes = require(ReplicatedStorage.Shared.Types.PlayerProfile)
 local SurvivalTypes = require(ReplicatedStorage.Shared.Types.Survival)
@@ -39,6 +40,66 @@ local function haveStatsChanged(previous: SurvivalTypes.SurvivalStats, current: 
 		or math.abs(previous.temperature - current.temperature) >= epsilon
 end
 
+local function hasStatusEffect(statusEffects: { SurvivalTypes.StatusEffect }, effectId: string): boolean
+	for _, effect in statusEffects do
+		if effect.id == effectId then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function removeStatusEffectById(statusEffects: { SurvivalTypes.StatusEffect }, effectId: string): boolean
+	for index, effect in statusEffects do
+		if effect.id == effectId then
+			table.remove(statusEffects, index)
+			return true
+		end
+	end
+
+	return false
+end
+
+local function computeStatusHpDamagePerMinute(statusEffects: { SurvivalTypes.StatusEffect }): number
+	local damage = 0
+
+	if hasStatusEffect(statusEffects, "bleeding") then
+		damage += StatusEffectConstants.BLEEDING_HP_PER_TICK * (60 / SurvivalConstants.TICK_INTERVAL_SECONDS)
+	end
+
+	if hasStatusEffect(statusEffects, "poison") then
+		damage += StatusEffectConstants.POISON_HP_PER_TICK * (60 / SurvivalConstants.TICK_INTERVAL_SECONDS)
+	end
+
+	if hasStatusEffect(statusEffects, "infection") then
+		damage += StatusEffectConstants.INFECTION_HP_PER_TICK * (60 / SurvivalConstants.TICK_INTERVAL_SECONDS)
+	end
+
+	return damage
+end
+
+local function updateStatusTransitions(data: PlayerProfileTypes.PlayerProfile)
+	local now = os.clock()
+
+	for _, effect in data.statusEffects do
+		if effect.id == "bleeding" and effect.appliedAt ~= nil then
+			if now - effect.appliedAt >= StatusEffectConstants.BLEEDING_TO_INFECTION_SECONDS then
+				if not hasStatusEffect(data.statusEffects, "infection") then
+					table.insert(data.statusEffects, {
+						id = "infection",
+						appliedAt = now,
+					})
+				end
+			end
+		end
+	end
+end
+
+local function applyStatusTickDamage(data: PlayerProfileTypes.PlayerProfile, tickMinutes: number)
+	local statusDamagePerMinute = computeStatusHpDamagePerMinute(data.statusEffects)
+	data.survival.health -= statusDamagePerMinute * tickMinutes
+end
 local function hasBlockingStatusEffects(statusEffects: { SurvivalTypes.StatusEffect }): boolean
 	for _, effect in statusEffects do
 		if effect.id == "bleeding" or effect.id == "poison" or effect.id == "infection" then
@@ -178,6 +239,8 @@ local function processPlayerTick(player: Player, tickMinutes: number)
 
 	local hpDeltaPerMinute = computeHpRegenPerMinute(data) - computeHpDamagePerMinute(survival)
 	survival.health += hpDeltaPerMinute * tickMinutes
+	updateStatusTransitions(data)
+	applyStatusTickDamage(data, tickMinutes)
 	clampStats(survival)
 
 	local didStatsChange = haveStatsChanged(previousStats, survival)
@@ -195,6 +258,66 @@ end
 local function processTick()
 	for _, player in Players:GetPlayers() do
 		processPlayerTick(player, SurvivalConstants.TICK_INTERVAL_SECONDS / 60)
+	end
+end
+
+function SurvivalService.addStatusEffect(player: Player, effectId: string)
+	local data = PlayerDataService:GetData(player)
+	if data == nil or hasStatusEffect(data.statusEffects, effectId) then
+		return
+	end
+
+	table.insert(data.statusEffects, {
+		id = effectId,
+		appliedAt = os.clock(),
+	})
+	PlayerSyncService.syncSurvivalToClient(player, data)
+end
+
+function SurvivalService.removeStatusEffect(player: Player, effectId: string)
+	local data = PlayerDataService:GetData(player)
+	if data == nil then
+		return
+	end
+
+	if removeStatusEffectById(data.statusEffects, effectId) then
+		PlayerSyncService.syncSurvivalToClient(player, data)
+	end
+end
+
+function SurvivalService.clearStatusEffects(player: Player)
+	local data = PlayerDataService:GetData(player)
+	if data == nil then
+		return
+	end
+
+	table.clear(data.statusEffects)
+	PlayerSyncService.syncSurvivalToClient(player, data)
+end
+
+function SurvivalService.applyDamage(player: Player, amount: number, statusEffectIds: { string }?)
+	local data = PlayerDataService:GetData(player)
+	if data == nil then
+		return
+	end
+
+	data.survival.health = math.clamp(data.survival.health - amount, 0, 100)
+
+	if statusEffectIds ~= nil then
+		for _, effectId in statusEffectIds do
+			if not hasStatusEffect(data.statusEffects, effectId) then
+				table.insert(data.statusEffects, {
+					id = effectId,
+					appliedAt = os.clock(),
+				})
+			end
+		end
+	end
+
+	PlayerSyncService.syncSurvivalToClient(player, data)
+
+	if data.survival.health <= 0 then
+		handleDeath(player, data)
 	end
 end
 

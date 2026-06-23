@@ -14,6 +14,7 @@ local Remotes = {
 		"UnequipItemEvent",
 		"SetHotbarSlotEvent",
 		"UseItemEvent",
+		"UseItemResultEvent",
 		"CraftItemEvent",
 		"CraftResultEvent",
 		"RecipesUpdatedEvent",
@@ -27,6 +28,8 @@ local Remotes = {
 		"HarvestResourceEvent",
 		"HarvestResourceResultEvent",
 		"WorldUpdatedEvent",
+		"AttackFaunaEvent",
+		"FaunaUpdatedEvent",
 	},
 	Functions = {},
 }

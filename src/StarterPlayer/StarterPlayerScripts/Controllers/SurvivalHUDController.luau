@@ -29,7 +29,28 @@ local bars: {
 	temperature: StatBarInstance,
 }? = nil
 
+local STATUS_EFFECT_KEYS = {
+	bleeding = "status.bleeding.name",
+	poison = "status.poison.name",
+	infection = "status.infection.name",
+}
+
+local STATUS_CURE_HINT_KEYS = {
+	bleeding = "status.bleeding.hint",
+	poison = "status.poison.hint",
+	infection = "status.infection.hint",
+}
+
+local statusRow: Frame? = nil
+local statusHintLabel: TextLabel? = nil
+local statusIcons: { [string]: TextLabel } = {}
 local lastSnapshot: SurvivalTypes.SurvivalSnapshot? = nil
+
+local STATUS_ICON_COLORS = {
+	bleeding = Color3.fromRGB(240, 90, 90),
+	poison = Color3.fromRGB(90, 220, 100),
+	infection = Color3.fromRGB(240, 170, 70),
+}
 
 local function refreshBarLabels()
 	if bars == nil then
@@ -59,6 +80,49 @@ local function updateBar(statName: string, bar: StatBarInstance, value: number)
 	bar:setAlertMessage(Localization.get(alertKey))
 end
 
+local function refreshStatusIcons(snapshot: SurvivalTypes.SurvivalSnapshot)
+	if statusRow == nil then
+		return
+	end
+
+	local activeIds: { [string]: boolean } = {}
+
+	for _, effect in snapshot.statusEffects do
+		activeIds[effect.id] = true
+	end
+
+	for effectId, icon in statusIcons do
+		local isActive = activeIds[effectId] == true
+		icon.Visible = isActive
+
+		if isActive then
+			local labelKey = STATUS_EFFECT_KEYS[effectId]
+			if labelKey ~= nil then
+				icon.Text = Localization.get(labelKey)
+			end
+		end
+	end
+
+	if statusHintLabel ~= nil then
+		local hintKey: string? = nil
+
+		if activeIds.poison == true then
+			hintKey = STATUS_CURE_HINT_KEYS.poison
+		elseif activeIds.bleeding == true then
+			hintKey = STATUS_CURE_HINT_KEYS.bleeding
+		elseif activeIds.infection == true then
+			hintKey = STATUS_CURE_HINT_KEYS.infection
+		end
+
+		if hintKey ~= nil then
+			statusHintLabel.Text = Localization.get(hintKey)
+			statusHintLabel.Visible = true
+		else
+			statusHintLabel.Visible = false
+		end
+	end
+end
+
 local function updateFromSnapshot(snapshot: SurvivalTypes.SurvivalSnapshot)
 	if bars == nil then
 		return
@@ -70,6 +134,7 @@ local function updateFromSnapshot(snapshot: SurvivalTypes.SurvivalSnapshot)
 	updateBar("hunger", bars.hunger, stats.hunger)
 	updateBar("thirst", bars.thirst, stats.thirst)
 	updateBar("temperature", bars.temperature, stats.temperature)
+	refreshStatusIcons(snapshot)
 end
 
 function SurvivalHUDController:Init()
@@ -89,8 +154,8 @@ function SurvivalHUDController:Init()
 	local container = Instance.new("Frame")
 	container.Name = "StatBars"
 	container.AnchorPoint = Vector2.new(0, 0)
-	container.Position = UDim2.fromOffset(12, 12)
-	container.Size = UDim2.fromOffset(280, 132)
+	container.Position = UDim2.fromOffset(12, 52)
+	container.Size = UDim2.fromOffset(280, 176)
 	container.BackgroundColor3 = Color3.fromRGB(20, 22, 28)
 	container.BackgroundTransparency = 0.15
 	container.BorderSizePixel = 0
@@ -137,6 +202,52 @@ function SurvivalHUDController:Init()
 
 	refreshBarLabels()
 
+	statusRow = Instance.new("Frame")
+	statusRow.Name = "StatusEffects"
+	statusRow.Size = UDim2.new(1, 0, 0, 18)
+	statusRow.BackgroundTransparency = 1
+	statusRow.LayoutOrder = 10
+	statusRow.Parent = container
+
+	local statusLayout = Instance.new("UIListLayout")
+	statusLayout.FillDirection = Enum.FillDirection.Horizontal
+	statusLayout.Padding = UDim.new(0, 4)
+	statusLayout.Parent = statusRow
+
+	for effectId, labelKey in STATUS_EFFECT_KEYS do
+		local icon = Instance.new("TextLabel")
+		icon.Name = effectId
+		icon.Size = UDim2.fromOffset(72, 16)
+		icon.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+		icon.BackgroundTransparency = 0.2
+		icon.TextColor3 = STATUS_ICON_COLORS[effectId] or Color3.fromRGB(240, 240, 240)
+		icon.TextSize = 11
+		icon.Font = Enum.Font.GothamMedium
+		icon.Text = Localization.get(labelKey)
+		icon.Visible = false
+		icon.Parent = statusRow
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 4)
+		corner.Parent = icon
+
+		statusIcons[effectId] = icon
+	end
+
+	statusHintLabel = Instance.new("TextLabel")
+	statusHintLabel.Name = "StatusHint"
+	statusHintLabel.Size = UDim2.new(1, 0, 0, 28)
+	statusHintLabel.BackgroundTransparency = 1
+	statusHintLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
+	statusHintLabel.TextSize = 10
+	statusHintLabel.Font = Enum.Font.Gotham
+	statusHintLabel.TextWrapped = true
+	statusHintLabel.TextXAlignment = Enum.TextXAlignment.Left
+	statusHintLabel.TextYAlignment = Enum.TextYAlignment.Top
+	statusHintLabel.Visible = false
+	statusHintLabel.LayoutOrder = 11
+	statusHintLabel.Parent = container
+
 	trove:Connect(Networking.getEvent("SurvivalUpdatedEvent").OnClientEvent, function(snapshot: SurvivalTypes.SurvivalSnapshot)
 		updateFromSnapshot(snapshot)
 	end)
@@ -147,6 +258,13 @@ function SurvivalHUDController:Start()
 
 	trove:Connect(Localization.LocaleChanged, function()
 		refreshBarLabels()
+
+		for effectId, icon in statusIcons do
+			local labelKey = STATUS_EFFECT_KEYS[effectId]
+			if labelKey ~= nil then
+				icon.Text = Localization.get(labelKey)
+			end
+		end
 
 		if lastSnapshot ~= nil then
 			updateFromSnapshot(lastSnapshot)
