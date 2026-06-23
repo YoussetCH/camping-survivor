@@ -5,7 +5,7 @@
 > **Idiomas:** English (default) · Español — extensible ([§1.11](./GDD-Camping-Survivor.md#111-localización-e-idiomas))
 > **Specs técnicas:** [`openspec/specs/`](../openspec/specs/)  
 > **Slice activo:** Ninguno — próximo `slice-06-world`  
-> **Último completado:** [`archive/2026-06-22-slice-05-camp`](../openspec/changes/archive/2026-06-22-slice-05-camp/)
+> **Último completado:** [`archive/2026-06-23-slice-05b-feature-modules`](../openspec/changes/archive/2026-06-23-slice-05b-feature-modules/)
 
 ## Workflow OpenSpec (Cursor)
 
@@ -60,6 +60,7 @@ openspec update    # refrescar comandos /opsx:* en Cursor
 | 03 | `slice-03-inventory` | inventory | Cap. 4 | Completado |
 | 04 | `slice-04-crafting` | crafting | Cap. 4 | Completado |
 | 05 | `slice-05-camp` | camp | Cap. 6 | Completado |
+| 05b | `slice-05b-feature-modules` | feature-modules + camp | Infra | Completado |
 | 06 | `slice-06-world` | world | Cap. 5 | **Próximo** |
 | 07 | `slice-07-fauna` | survival + world | Cap. 3/5 | Pendiente |
 | 08 | `slice-08-quests` | quests | Cap. 8 | Pendiente |
@@ -74,7 +75,7 @@ openspec update    # refrescar comandos /opsx:* en Cursor
 
 ```
 01 Foundation → 02 Survival, 03 Inventory
-03 → 04 Crafting → 05 Camp → 06 World
+03 → 04 Crafting → 05 Camp → 05b Feature Modules → 06 World
 02 + 04 → 07 Fauna
 05 + 07 → 08 Quests → 09 Helpers
 06 → 10 Biomes | 05 → 11 Multiplayer → 12 Raids
@@ -97,7 +98,10 @@ openspec update    # refrescar comandos /opsx:* en Cursor
 | [economy](../openspec/specs/economy/spec.md) | EconomyService, MonetizationService |
 | [ui](../openspec/specs/ui/spec.md) | Controllers |
 | [localization](../openspec/specs/localization/spec.md) | LocalizationService, LocalizationController |
+| [feature-modules](../openspec/specs/feature-modules/spec.md) | Registries, Behaviors, FeatureBootstrap |
 
 ## Extender features
 
 Nuevo change en `openspec/changes/` con delta ADDED/MODIFIED en `specs/`. Ver [openspec/config.yaml](../openspec/config.yaml).
+
+**Modularidad obligatoria:** toda estructura, mascota, estación o componente reutilizable debe seguir [Feature-Modules.md](./Feature-Modules.md) (carpeta propia + registry + sin acoplar orquestadores).

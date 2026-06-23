@@ -10,7 +10,6 @@ local ServerStorage = game:GetService("ServerStorage")
 local BaseService = require(ServerScriptService.Kernel.BaseService)
 local CampConstants = require(ReplicatedStorage.Shared.Constants.CampConstants)
 local CampRepository = require(ServerScriptService.Repositories.CampRepository)
-local InventoryConstants = require(ReplicatedStorage.Shared.Constants.InventoryConstants)
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local Networking = require(ReplicatedStorage.Shared.Networking.Networking)
 local Recipes = require(ReplicatedStorage.Shared.Constants.Recipes)
@@ -18,11 +17,13 @@ local StructuresConstants = require(ReplicatedStorage.Shared.Constants.Structure
 local StructureModelFactory = require(ReplicatedStorage.Shared.Structures.StructureModelFactory)
 local CampTypes = require(ReplicatedStorage.Shared.Types.Camp)
 local CampProximity = require(ReplicatedStorage.Shared.Utilities.CampProximity)
-local InventoryTypes = require(ReplicatedStorage.Shared.Types.Inventory)
 local PlayerProfileTypes = require(ReplicatedStorage.Shared.Types.PlayerProfile)
 local InventoryService = require(ServerScriptService.Services.InventoryService)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 local PlayerSyncService = require(ServerScriptService.Services.PlayerSyncService)
+local FeatureBootstrap = require(ServerScriptService.Features.FeatureBootstrap)
+local GameEvents = require(ServerScriptService.Features.GameEvents)
+local StructureBehaviorRegistry = require(ServerScriptService.Features.StructureBehaviorRegistry)
 
 local CampService = BaseService.new("CampService")
 
@@ -442,63 +443,39 @@ local function assignPlot(player: Player, data: PlayerProfileTypes.PlayerProfile
 	data.camp.plotId = bestPlotId
 	plotOccupants[bestPlotId] = player.UserId
 	assignedPlotThisSession[player.UserId] = true
-	CampService.teleportPlayerToPlot(player, bestPlotId)
+	GameEvents.fireCampPlotAssigned(player, bestPlotId)
 	Logger.info("CampService", `Assigned {bestPlotId} to {player.Name}`)
 	return true
 end
 
-local function ensureStarterRecipesUnlocked(player: Player, data: PlayerProfileTypes.PlayerProfile)
-	local CraftingService = require(ServerScriptService.Services.CraftingService)
-	CraftingService.ensureStarterRecipesUnlocked(player, data)
-end
-
 local function recalculateCampLevel(player: Player, data: PlayerProfileTypes.PlayerProfile)
+	local oldLevel = data.camp.level
 	local hasCampfire = countBlueprintPlaced(data.camp.structures, "bp_campfire") >= 1
 	local hasChest = countBlueprintPlaced(data.camp.structures, "bp_chest") >= 1
 	local hasCraftTable = countBlueprintPlaced(data.camp.structures, "bp_craft_table") >= 1
 
 	if hasCampfire and hasChest and hasCraftTable and data.camp.level < 1 then
 		data.camp.level = 1
-		ensureStarterRecipesUnlocked(player, data)
+	end
+
+	if data.camp.level ~= oldLevel then
+		GameEvents.fireCampLevelChanged(player, data.camp.level, oldLevel)
 	end
 end
 
-function CampService.isPlayerNearStation(player: Player, station: string): boolean
-	local data = PlayerDataService:GetData(player)
-
-	if data == nil or data.camp.plotId == nil then
-		return false
-	end
-
-	local character = player.Character
-	local root = if character ~= nil then character:FindFirstChild("HumanoidRootPart") else nil
-
-	if root == nil or not root:IsA("BasePart") then
-		return false
-	end
-
-	local plotId = data.camp.plotId :: string
-	local plotFolder = getStructuresFolder(plotId)
-
-	if CampProximity.isNearStationInFolder(root.Position, plotFolder, station, player.UserId) then
+local function invokeBehaviorHook(hook: ((...any) -> ())?, ...: any): boolean
+	if hook == nil then
 		return true
 	end
 
-	local range = CampProximity.getStationRange(station)
+	local ok, hookError = pcall(hook, ...)
 
-	for _, structure in data.camp.structures do
-		local definition = StructuresConstants.get(structure.blueprintId)
-
-		if definition ~= nil and definition.station == station then
-			local position = CampProximity.toVector3(structure.position)
-
-			if position ~= nil and CampProximity.horizontalDistance(root.Position, position) <= range then
-				return true
-			end
-		end
+	if not ok then
+		Logger.warn("CampService", `Structure behavior hook failed: {hookError}`)
+		return false
 	end
 
-	return false
+	return true
 end
 
 local function grantRefund(player: Player, data: PlayerProfileTypes.PlayerProfile, blueprintId: string)
@@ -591,6 +568,33 @@ local function placeStructure(player: Player, request: unknown)
 		return
 	end
 
+	local plotId = data.camp.plotId :: string
+	local behavior = StructureBehaviorRegistry.get(blueprintId)
+
+	if behavior ~= nil and behavior.validatePlacement ~= nil then
+		local structureIdPreview = "pending"
+		local previewStructure: CampTypes.CampStructure = {
+			structureId = structureIdPreview,
+			blueprintId = blueprintId,
+			position = CampProximity.serializeVector3(snappedPosition),
+			rotation = rotation,
+			hp = definition.maxHp,
+		}
+		local placementOk, placementReason = behavior.validatePlacement({
+			player = player,
+			data = data,
+			structure = previewStructure,
+			plotId = plotId,
+			position = snappedPosition,
+			rotation = rotation,
+		})
+
+		if not placementOk then
+			firePlaceResult(player, { success = false, reasonKey = placementReason or "camp.error.out_of_bounds" })
+			return
+		end
+	end
+
 	if not InventoryService.removeItems(player, data, { { itemId = blueprintId, quantity = 1 } }) then
 		firePlaceResult(player, { success = false, reasonKey = "camp.error.missing_blueprint" })
 		return
@@ -607,11 +611,21 @@ local function placeStructure(player: Player, request: unknown)
 
 	table.insert(data.camp.structures, structure)
 
-	if blueprintId == "bp_chest" then
-		data.camp.chests[structureId] = {}
+	if behavior ~= nil then
+		if not invokeBehaviorHook(behavior.onPlace, {
+			player = player,
+			data = data,
+			structure = structure,
+			plotId = plotId,
+		}) then
+			table.remove(data.camp.structures, #data.camp.structures)
+			InventoryService.grantItem(player, blueprintId, 1)
+			firePlaceResult(player, { success = false, reasonKey = "camp.error.place_failed" })
+			return
+		end
 	end
 
-	spawnStructureWorld(player, data.camp.plotId, structure)
+	spawnStructureWorld(player, plotId, structure)
 	recalculateCampLevel(player, data)
 	syncCamp(player, data)
 
@@ -650,9 +664,20 @@ local function demolishStructure(player: Player, structureId: unknown)
 		return
 	end
 
+	local plotId = data.camp.plotId :: string
+	local behavior = StructureBehaviorRegistry.get(removedStructure.blueprintId)
+
+	if behavior ~= nil then
+		invokeBehaviorHook(behavior.onDemolish, {
+			player = player,
+			data = data,
+			structure = removedStructure,
+			plotId = plotId,
+		})
+	end
+
 	table.remove(data.camp.structures, removedIndex)
-	data.camp.chests[structureId] = nil
-	removeStructureWorld(data.camp.plotId, structureId)
+	removeStructureWorld(plotId, structureId)
 	grantRefund(player, data, removedStructure.blueprintId)
 	syncCamp(player, data)
 
@@ -723,207 +748,6 @@ local function moveStructure(player: Player, request: unknown)
 	fireMoveResult(player, { success = true, reasonKey = "camp.success.moved" })
 end
 
-local function findChestItem(chest: InventoryTypes.BagSlots, chestSlotKey: string): InventoryTypes.InventoryItem?
-	if not CampConstants.isValidChestSlotKey(chestSlotKey) then
-		return nil
-	end
-
-	return chest[chestSlotKey]
-end
-
-local function findEmptyChestSlot(chest: InventoryTypes.BagSlots): string?
-	for slotIndex = 1, CampConstants.CHEST_SLOT_COUNT do
-		local slotKey = CampConstants.getChestSlotKey(slotIndex)
-
-		if chest[slotKey] == nil then
-			return slotKey
-		end
-	end
-
-	return nil
-end
-
-local function transferToChest(
-	player: Player,
-	data: PlayerProfileTypes.PlayerProfile,
-	chestStructureId: string,
-	bagSlotKey: string,
-	chestSlotKey: string?
-)
-	local chest = data.camp.chests[chestStructureId]
-
-	if chest == nil then
-		return
-	end
-
-	local bagItem = data.inventory[bagSlotKey]
-
-	if bagItem == nil then
-		return
-	end
-
-	local targetChestSlotKey = chestSlotKey or findEmptyChestSlot(chest)
-
-	if targetChestSlotKey == nil then
-		return
-	end
-
-	local maxStack = InventoryConstants.getMaxStack(bagItem.itemId)
-	local chestItem = chest[targetChestSlotKey]
-
-	if chestItem ~= nil and chestItem.itemId ~= bagItem.itemId then
-		return
-	end
-
-	if chestItem == nil then
-		chest[targetChestSlotKey] = {
-			itemId = bagItem.itemId,
-			quantity = bagItem.quantity,
-		}
-		data.inventory[bagSlotKey] = nil
-		InventoryTypes.clearHotbarReferences(data.hotbar, { [bagSlotKey] = true })
-	else
-		local space = maxStack - chestItem.quantity
-
-		if space <= 0 then
-			return
-		end
-
-		local moved = math.min(space, bagItem.quantity)
-		chestItem.quantity += moved
-		bagItem.quantity -= moved
-
-		if bagItem.quantity <= 0 then
-			data.inventory[bagSlotKey] = nil
-			InventoryTypes.clearHotbarReferences(data.hotbar, { [bagSlotKey] = true })
-		end
-	end
-
-	PlayerSyncService.syncInventoryToClient(player, data)
-	syncCamp(player, data)
-end
-
-local function transferToBag(
-	player: Player,
-	data: PlayerProfileTypes.PlayerProfile,
-	chestStructureId: string,
-	chestSlotKey: string,
-	bagSlotKey: string?
-)
-	local chest = data.camp.chests[chestStructureId]
-
-	if chest == nil then
-		return
-	end
-
-	local chestItem = findChestItem(chest, chestSlotKey)
-
-	if chestItem == nil then
-		return
-	end
-
-	if bagSlotKey ~= nil then
-		local bagItem = data.inventory[bagSlotKey]
-
-		if bagItem == nil then
-			data.inventory[bagSlotKey] = {
-				itemId = chestItem.itemId,
-				quantity = chestItem.quantity,
-			}
-			chest[chestSlotKey] = nil
-		elseif bagItem.itemId == chestItem.itemId then
-			local maxStack = InventoryConstants.getMaxStack(chestItem.itemId)
-			local space = maxStack - bagItem.quantity
-
-			if space <= 0 then
-				return
-			end
-
-			local moved = math.min(space, chestItem.quantity)
-			bagItem.quantity += moved
-			chestItem.quantity -= moved
-
-			if chestItem.quantity <= 0 then
-				chest[chestSlotKey] = nil
-			end
-		else
-			return
-		end
-	else
-		local granted = InventoryService.grantItem(player, chestItem.itemId, chestItem.quantity)
-
-		if not granted then
-			return
-		end
-
-		chest[chestSlotKey] = nil
-	end
-
-	PlayerSyncService.syncInventoryToClient(player, data)
-	syncCamp(player, data)
-end
-
-local function ownsChestStructure(data: PlayerProfileTypes.PlayerProfile, chestStructureId: string): boolean
-	for _, structure in data.camp.structures do
-		if structure.structureId == chestStructureId and structure.blueprintId == "bp_chest" then
-			return true
-		end
-	end
-
-	return false
-end
-
-local function transferItem(player: Player, request: unknown)
-	if type(request) ~= "table" then
-		return
-	end
-
-	local payload = request :: CampTypes.TransferItemRequest
-	local direction = payload.direction
-	local chestStructureId = payload.chestStructureId
-
-	if direction ~= "toChest" and direction ~= "toBag" then
-		return
-	end
-
-	if type(chestStructureId) ~= "string" then
-		return
-	end
-
-	local data = PlayerDataService:GetData(player)
-
-	if data == nil or not ownsChestStructure(data, chestStructureId) then
-		return
-	end
-
-	if direction == "toChest" then
-		if type(payload.bagSlotKey) ~= "string" or not InventoryTypes.isValidBagSlotKey(payload.bagSlotKey) then
-			return
-		end
-
-		local chestSlotKey = if type(payload.chestSlotKey) == "string" then payload.chestSlotKey else nil
-
-		if chestSlotKey ~= nil and not CampConstants.isValidChestSlotKey(chestSlotKey) then
-			return
-		end
-
-		transferToChest(player, data, chestStructureId, payload.bagSlotKey, chestSlotKey)
-		return
-	end
-
-	if type(payload.chestSlotKey) ~= "string" or not CampConstants.isValidChestSlotKey(payload.chestSlotKey) then
-		return
-	end
-
-	local bagSlotKey = if type(payload.bagSlotKey) == "string" then payload.bagSlotKey else nil
-
-	if bagSlotKey ~= nil and not InventoryTypes.isValidBagSlotKey(bagSlotKey) then
-		return
-	end
-
-	transferToBag(player, data, chestStructureId, payload.chestSlotKey, bagSlotKey)
-end
-
 local function releasePlot(player: Player)
 	local data = PlayerDataService:GetData(player)
 
@@ -962,10 +786,17 @@ end
 function CampService:Init()
 	local trove = self:GetTrove()
 
+	FeatureBootstrap.bindCampSync(syncCamp)
+	FeatureBootstrap.bindRemotes(function(signal, handler)
+		trove:Connect(signal, handler)
+	end)
+	FeatureBootstrap.wireCampEvents(function(player: Player, plotId: string)
+		CampService.teleportPlayerToPlot(player, plotId)
+	end)
+
 	trove:Connect(Networking.getEvent("PlaceStructureEvent").OnServerEvent, placeStructure)
 	trove:Connect(Networking.getEvent("DemolishStructureEvent").OnServerEvent, demolishStructure)
 	trove:Connect(Networking.getEvent("MoveStructureEvent").OnServerEvent, moveStructure)
-	trove:Connect(Networking.getEvent("TransferItemEvent").OnServerEvent, transferItem)
 	trove:Connect(Players.PlayerRemoving, releasePlot)
 end
 

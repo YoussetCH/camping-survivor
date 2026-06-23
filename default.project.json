@@ -28,6 +28,9 @@
       "Services": {
         "$path": "src/ServerScriptService/Services"
       },
+      "Features": {
+        "$path": "src/ServerScriptService/Features"
+      },
       "Packages": {
         "$path": "ServerPackages"
       }

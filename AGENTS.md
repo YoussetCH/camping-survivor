@@ -8,6 +8,7 @@ This project follows enterprise-grade Roblox architecture and **OpenSpec-compati
 |----------|---------|
 | [docs/GDD-Camping-Survivor.md](docs/GDD-Camping-Survivor.md) | Product spec (what the game is) |
 | [docs/Implementation-Plan.md](docs/Implementation-Plan.md) | Slice index and dependencies |
+| [docs/Feature-Modules.md](docs/Feature-Modules.md) | **Modular features & components** (isolation, registries, checklists) |
 | [docs/Item-Icons.md](docs/Item-Icons.md) | Add or change inventory/crafting item icons |
 | [openspec/config.yaml](openspec/config.yaml) | AI context, capabilities map |
 | [openspec/specs/](openspec/specs/) | Living technical specs per capability |
@@ -69,6 +70,16 @@ Never place business logic inside LocalScripts.
 Server is always authoritative.
 
 UI is passive: display data and send user intent only.
+
+## Feature modules (required)
+
+Every new gameplay element or reusable component MUST be **isolated and pluggable**.
+
+- Guide: [docs/Feature-Modules.md](docs/Feature-Modules.md)
+- Spec: [openspec/specs/feature-modules/spec.md](openspec/specs/feature-modules/spec.md)
+- Rule: [.cursor/rules/roblox-feature-modules.mdc](.cursor/rules/roblox-feature-modules.mdc)
+
+No feature-specific logic inside orchestrator services (`CampService`, etc.). Use registries + `GameEvents`.
 
 ## Localization (required)
 

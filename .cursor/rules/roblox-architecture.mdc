@@ -18,8 +18,11 @@ Use:
 Service Layer
 Controller Layer
 Shared Layer
+Feature Modules (pluggable elements — see roblox-feature-modules.mdc)
 
-Business logic belongs only in Services.
+Business logic belongs only in Services (or Feature Behaviors on the server).
+
+Orchestrator services (e.g. CampService) MUST delegate feature-specific logic to registries — never inline `if featureId == ...`.
 
 Controllers:
 

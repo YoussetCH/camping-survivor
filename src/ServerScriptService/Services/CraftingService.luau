@@ -9,6 +9,7 @@ local CraftingConstants = require(ReplicatedStorage.Shared.Constants.CraftingCon
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local Networking = require(ReplicatedStorage.Shared.Networking.Networking)
 local Recipes = require(ReplicatedStorage.Shared.Constants.Recipes)
+local StationRegistry = require(ServerScriptService.Features.StationRegistry)
 local CraftingTypes = require(ReplicatedStorage.Shared.Types.Crafting)
 local RecipeTypes = require(ReplicatedStorage.Shared.Types.Recipe)
 local PlayerProfileTypes = require(ReplicatedStorage.Shared.Types.PlayerProfile)
@@ -147,9 +148,7 @@ local function craftItem(player: Player, recipeId: unknown)
 	end
 
 	if not CraftingConstants.isHandsStation(recipe.station) then
-		local CampService = require(ServerScriptService.Services.CampService)
-
-		if not CampService.isPlayerNearStation(player, recipe.station) then
+		if not StationRegistry.isPlayerNearStation(player, recipe.station) then
 			fireCraftResult(player, {
 				success = false,
 				recipeId = recipeId,

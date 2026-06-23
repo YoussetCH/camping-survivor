@@ -1,6 +1,6 @@
 # Camp — Technical Spec
 
-**Status:** Implemented (slice-05, starter structures level 0→1)  
+**Status:** Implemented (slice-05, slice-05b feature modules; starter structures level 0→1)  
 **GDD:** Cap. 6  
 **Service:** CampService
 
@@ -120,6 +120,34 @@ The system SHALL enforce a maximum of **10** placed structures when `camp.level`
 - GIVEN a player already has 10 structures on their plot
 - WHEN they attempt to place an 11th
 - THEN the request is rejected with reason key `camp.error.structure_cap`
+
+### Requirement: Structure-specific logic delegation
+
+The camp orchestrator (`CampService`) SHALL NOT contain inline branches on `blueprintId` for structure-specific placement, demolition, storage, or level side-effects. All such logic MUST delegate to the registered `StructureBehavior` for that blueprint via `StructureBehaviorRegistry`.
+
+#### Scenario: No inline chest init in CampService
+
+- GIVEN the codebase implements chest storage initialization
+- WHEN reviewing `CampService` placement flow
+- THEN chest storage init is invoked through `ChestBehavior.onPlace`
+- AND `CampService` does not contain `if blueprintId == "bp_chest"` for storage init
+
+#### Scenario: Camp level side-effects via events or behaviors
+
+- GIVEN camp level transitions from 0 to 1
+- WHEN level recalculation completes
+- THEN starter recipe unlock is triggered without `CampService` directly requiring `CraftingService`
+
+### Requirement: Chest transfer via chest behavior
+
+The system SHALL handle `TransferItemEvent` in the chest feature behavior module (or a dedicated chest handler registered by `FeatureBootstrap`). Validation rules MUST remain: owner-only, 24 slots per chest, server-authoritative stack limits.
+
+#### Scenario: Transfer handler location
+
+- GIVEN a player transfers an item from bag to chest
+- WHEN the server processes `TransferItemEvent`
+- THEN the handler lives in the chest feature module tree
+- AND ownership and slot validation behave identically to slice-05
 
 ## Related
 

@@ -1,6 +1,6 @@
 # Crafting — Technical Spec
 
-**Status:** Implemented (slice-04 hands; slice-05 camp stations)  
+**Status:** Implemented (slice-04 hands; slice-05 camp stations; slice-05b station registry)  
 **GDD:** Cap. 4  
 **Service:** CraftingService
 
@@ -84,7 +84,7 @@ The server SHALL fire `RecipesUpdatedEvent` with `{ unlocked }` after profile lo
 
 ### Requirement: Camp craft stations
 
-The system SHALL allow crafting at station `craft_table` when the player is within **12 studs** of their own placed `bp_craft_table` on their assigned plot, and at station `campfire` when within **8 studs** of their own placed `bp_campfire`.
+The system SHALL allow crafting at station `craft_table` when the player is within **12 studs** of their own placed `bp_craft_table` on their assigned plot, and at station `campfire` when within **8 studs** of their own placed `bp_campfire`. Station proximity MUST be resolved through `StationRegistry.isPlayerNearStation` rather than direct calls to `CampService`.
 
 #### Scenario: Craft at craft table
 

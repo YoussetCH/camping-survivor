@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local BaseService = require(ServerScriptService.Kernel.BaseService)
+local GameEvents = require(ServerScriptService.Features.GameEvents)
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local InventoryService = require(ServerScriptService.Services.InventoryService)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
@@ -103,8 +104,7 @@ local function teleportToSpawn(player: Player)
 	local data = PlayerDataService:GetData(player)
 
 	if data ~= nil and data.camp.plotId ~= nil then
-		local CampService = require(ServerScriptService.Services.CampService)
-		CampService.teleportPlayerToPlot(player, data.camp.plotId)
+		GameEvents.fireRequestPlotTeleport(player, data.camp.plotId)
 		return
 	end
 

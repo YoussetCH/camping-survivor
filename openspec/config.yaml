@@ -7,7 +7,8 @@ context: |
   Project: Camping Survivor — Roblox survival game (Luau, Rojo, Wally, ProfileStore).
   Product spec: docs/GDD-Camping-Survivor.md v1.2
   Implementation index: docs/Implementation-Plan.md
-  Architecture: Services (server) + Controllers (client) + Repositories (persistence only).
+  Architecture: Services (server) + Controllers (client) + Repositories (persistence only) + Feature Modules (pluggable).
+  Feature module guide: docs/Feature-Modules.md · spec: openspec/specs/feature-modules/spec.md
   Default locale: en. Launch locales: en, es. All player-visible text uses Localization keys.
   Remotes registry: src/ReplicatedStorage/Shared/Constants/Remotes.luau
   One vertical slice at a time. Active change path in workflow.active_change below.
@@ -21,6 +22,7 @@ rules:
   design:
     - List services, controllers, remotes, types, and security validations
     - UI must be passive; business logic only in services
+    - New gameplay elements MUST follow feature-module isolation (docs/Feature-Modules.md)
   specs:
     - Use ADDED/MODIFIED/REMOVED deltas; scenarios with #### Scenario headers
     - Use SHALL/MUST for requirements
@@ -67,6 +69,7 @@ cursor_rules:
   - .cursor/rules/roblox-performance.mdc
   - .cursor/rules/roblox-openspec.mdc
   - .cursor/rules/roblox-i18n.mdc
+  - .cursor/rules/roblox-feature-modules.mdc
 
 capabilities:
   foundation:
@@ -105,6 +108,9 @@ capabilities:
   localization:
     gdd: "§1.11"
     spec: openspec/specs/localization/spec.md
+  feature-modules:
+    gdd: Infrastructure
+    spec: openspec/specs/feature-modules/spec.md
 
 conventions:
   remotes_registry: src/ReplicatedStorage/Shared/Constants/Remotes.luau
@@ -114,6 +120,9 @@ conventions:
   recipes_constants: src/ReplicatedStorage/Shared/Constants/Recipes.luau
   localization_module: src/ReplicatedStorage/Shared/Localization/Localization.luau
   locale_tables: src/ReplicatedStorage/Shared/Localization/Locales/
+  feature_modules_guide: docs/Feature-Modules.md
+  shared_features_path: src/ReplicatedStorage/Shared/Features/
+  server_features_path: src/ServerScriptService/Features/
 
 workflow:
   active_change: null

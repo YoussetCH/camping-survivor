@@ -1,0 +1,68 @@
+---
+description: Pluggable feature modules — isolation and modularity (required for every new component/feature)
+alwaysApply: true
+---
+
+# Feature module isolation (required)
+
+Every new **gameplay feature** or **reusable component** MUST be isolated and pluggable.
+
+Human guide: [docs/Feature-Modules.md](../../docs/Feature-Modules.md)  
+Technical spec: [openspec/specs/feature-modules/spec.md](../../openspec/specs/feature-modules/spec.md)
+
+## Before implementing
+
+1. Decide: **kernel**, **orchestrator**, or **feature module** — do not mix.
+2. New element = new folder under `Shared/Features/<Name>/` (+ server `Behaviors/` if authoritative logic).
+3. Register in the appropriate **registry** or **GameEvents** — never hardcode in orchestrator services.
+4. OpenSpec delta required before code (see `roblox-openspec.mdc`).
+
+## Structure features (`bp_*`, stations, traps, etc.)
+
+MUST:
+
+- Export definition + model from `ReplicatedStorage/Shared/Features/<Name>/`
+- Implement server hooks in `ServerScriptService/Features/Behaviors/<Name>Behavior.luau`
+- Register via `StructureBehaviorRegistry` (+ `StationRegistry` if craft station)
+- Add definition to `FeatureDefinitions.luau` and model to `StructureModelRegistry`
+- Require behavior in `FeatureBootstrap.init()`
+
+MUST NOT:
+
+- Add `if blueprintId == "..."` or feature-specific branches inside `CampService` (or other orchestrators)
+- `require` another feature module for business logic
+- Call `CampService` from `CraftingService` / `SurvivalService` — use `StationRegistry` / `GameEvents`
+
+## Cross-feature coordination
+
+| Need | Use |
+|------|-----|
+| Craft station proximity | `StationRegistry.isPlayerNearStation` |
+| Plot assigned / level changed / teleport | `GameEvents` (`CampPlotAssigned`, `CampLevelChanged`, `RequestPlotTeleport`) |
+| Structure place/demolish side effects | `StructureBehavior` hooks |
+
+No lateral service-to-service `require` for notifications.
+
+## UI components
+
+MUST:
+
+- Live in `Shared/UI/Components/` (display + intent callbacks only)
+- Controllers: cache/sync + fire remotes — no business rules, no datastore
+- All player-visible strings = localization keys
+
+MUST NOT:
+
+- Couple a UI component to one feature via hidden globals or service requires
+- Duplicate feature logic already owned by a Behavior/Service
+
+## Helpers, fauna, quests (future)
+
+Follow the same pattern: `<Name>Definition`, optional shared model, `<Name>Behavior`, domain registry (`HelperBehaviorRegistry`, etc.), bootstrap registration.
+
+## Review gate (self-check before finishing)
+
+- [ ] Can this feature be disabled by removing its folder + registry entry only?
+- [ ] Orchestrator unchanged except generic hook calls?
+- [ ] No new circular requires between services?
+- [ ] Spec delta + verify checklist updated?

@@ -68,6 +68,7 @@ end
 
 local INIT_ORDER = {
 	"NetworkingService",
+	"FeatureBootstrapService",
 }
 
 local function getInitPriority(serviceName: string): number
