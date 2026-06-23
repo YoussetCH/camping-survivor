@@ -25,9 +25,16 @@ local panelFrame: Frame? = nil
 local screenGui: ScreenGui? = nil
 local selectedBagSlotKey: string? = nil
 local latestSnapshot: PlayerProfileTypes.InventorySnapshot? = nil
+local equipButton: TextButton? = nil
+local unequipButton: TextButton? = nil
 
 local PANEL_DISPLAY_ORDER = 105
 local PANEL_OPEN_DISPLAY_ORDER = 115
+
+local BUTTON_ENABLED_BG = Color3.fromRGB(45, 48, 58)
+local BUTTON_DISABLED_BG = Color3.fromRGB(32, 34, 40)
+local BUTTON_ENABLED_TEXT = Color3.fromRGB(240, 240, 240)
+local BUTTON_DISABLED_TEXT = Color3.fromRGB(120, 124, 132)
 
 local function normalizeSnapshot(snapshot: PlayerProfileTypes.InventorySnapshot): PlayerProfileTypes.InventorySnapshot
 	return {
@@ -61,6 +68,73 @@ local function refreshSelectedSlotHighlight()
 		local slotKey = InventoryConstants.getBagSlotKey(index)
 		local slot = bagSlots[index]
 		slot:setSelected(selectedBagSlotKey == slotKey)
+	end
+end
+
+local function hasEquippedTool(): boolean
+	if latestSnapshot == nil then
+		return false
+	end
+
+	return latestSnapshot.equipped.toolItemId ~= nil
+end
+
+local function getSelectedItem(): InventoryTypes.InventoryItem?
+	if latestSnapshot == nil or selectedBagSlotKey == nil then
+		return nil
+	end
+
+	return latestSnapshot.inventory[selectedBagSlotKey]
+end
+
+local function isEquippableTool(itemId: string): boolean
+	local definition = Items.get(itemId)
+
+	return definition ~= nil and definition.category == "tool"
+end
+
+local function canEquipSelected(): boolean
+	local item = getSelectedItem()
+
+	if item == nil then
+		return false
+	end
+
+	if not isEquippableTool(item.itemId) then
+		return false
+	end
+
+	if latestSnapshot == nil then
+		return false
+	end
+
+	return latestSnapshot.equipped.toolItemId ~= item.itemId
+end
+
+local function canUnequip(): boolean
+	return hasEquippedTool()
+end
+
+local function setActionButtonEnabled(button: TextButton?, enabled: boolean)
+	if button == nil then
+		return
+	end
+
+	button.Active = enabled
+	button.AutoButtonColor = enabled
+	button.BackgroundColor3 = if enabled then BUTTON_ENABLED_BG else BUTTON_DISABLED_BG
+	button.TextColor3 = if enabled then BUTTON_ENABLED_TEXT else BUTTON_DISABLED_TEXT
+end
+
+local function refreshActionButtons()
+	if equipButton ~= nil then
+		equipButton.Text = Localization.get("ui.inventory.equip")
+		setActionButtonEnabled(equipButton, canEquipSelected())
+	end
+
+	if unequipButton ~= nil then
+		unequipButton.Text = Localization.get("ui.inventory.unequip")
+		setActionButtonEnabled(unequipButton, canUnequip())
 	end
 end
 
@@ -118,6 +192,7 @@ local function renderSnapshot(snapshot: PlayerProfileTypes.InventorySnapshot)
 	end
 
 	refreshSelectedSlotHighlight()
+	refreshActionButtons()
 end
 
 local function requestUse(bagSlotKey: string?)
@@ -128,8 +203,16 @@ local function requestUse(bagSlotKey: string?)
 	Networking.getEvent("UseItemEvent"):FireServer(bagSlotKey)
 end
 
+local function requestUnequip()
+	if not canUnequip() then
+		return
+	end
+
+	Networking.getEvent("UnequipItemEvent"):FireServer()
+end
+
 local function requestEquip(bagSlotKey: string?)
-	if bagSlotKey == nil then
+	if bagSlotKey == nil or not canEquipSelected() then
 		return
 	end
 
@@ -143,6 +226,7 @@ end
 local function onBagSlotActivated(bagSlotKey: string?)
 	selectedBagSlotKey = bagSlotKey
 	refreshSelectedSlotHighlight()
+	refreshActionButtons()
 
 	local chestController = ClientKernel.getController("ChestController")
 
@@ -361,9 +445,16 @@ function InventoryHUDController:Init()
 		requestUse(selectedBagSlotKey)
 	end)
 
-	createActionButton(actions, "ui.inventory.equip", 2, function()
+	equipButton = createActionButton(actions, "ui.inventory.equip", 2, function()
 		requestEquip(selectedBagSlotKey)
 	end)
+
+	unequipButton = createActionButton(actions, "ui.inventory.unequip", 3, function()
+		requestUnequip()
+	end)
+	unequipButton.Size = UDim2.fromOffset(84, 28)
+	equipButton.Size = UDim2.fromOffset(84, 28)
+	refreshActionButtons()
 
 	local toggleButton = Instance.new("TextButton")
 	toggleButton.Name = "ToggleInventory"
@@ -445,6 +536,8 @@ function InventoryHUDController:Start()
 				title.Text = Localization.get("ui.inventory.title")
 			end
 		end
+
+		refreshActionButtons()
 
 		if latestSnapshot ~= nil then
 			renderSnapshot(latestSnapshot)

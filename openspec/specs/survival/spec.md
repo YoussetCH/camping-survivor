@@ -23,13 +23,19 @@ The system SHALL run `SurvivalService` on a **6 second** interval and apply auth
 
 ### Requirement: Temperature drift
 
-The system SHALL move player temperature toward ambient at **2 points/minute** until slice-06 provides biome context; ambient defaults to **45**.
+The system SHALL move player temperature toward **biome ambient** from `BiomeService` (day/night aware) at **2 points/minute**. When world services are unavailable, ambient defaults to **45**.
 
 #### Scenario: Drift from comfort
 
-- GIVEN player temperature is 50 and ambient is 45
+- GIVEN player temperature is 50 and biome ambient is 45
 - WHEN 60 seconds pass
 - THEN temperature moves approximately 2 points toward 45
+
+#### Scenario: Night forest colder ambient
+
+- GIVEN the player is in `forest_near` at night (ambient 25)
+- WHEN 60 seconds pass
+- THEN temperature moves approximately 2 points toward 25
 
 ### Requirement: Critical stat HP damage
 

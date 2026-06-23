@@ -70,6 +70,7 @@ cursor_rules:
   - .cursor/rules/roblox-openspec.mdc
   - .cursor/rules/roblox-i18n.mdc
   - .cursor/rules/roblox-feature-modules.mdc
+  - .cursor/rules/roblox-world-visuals.mdc
 
 capabilities:
   foundation:

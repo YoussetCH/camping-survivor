@@ -8,13 +8,14 @@ local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local PlayerDataServiceModule = require(ServerScriptService.Services.PlayerDataService)
 local ServerKernel = require(ServerScriptService.Kernel.ServerKernel)
 local ProfileStore = require(ServerScriptService.Packages.ProfileStore)
+local WorldBootstrap = require(ServerScriptService.Bootstrap.WorldBootstrap)
 
 local function ensureDevWorld()
 	if workspace:FindFirstChild("DevBaseplate") == nil then
 		local baseplate = Instance.new("Part")
 		baseplate.Name = "DevBaseplate"
 		baseplate.Anchored = true
-		baseplate.Size = Vector3.new(512, 20, 512)
+		baseplate.Size = Vector3.new(800, 20, 800)
 		baseplate.Position = Vector3.new(0, -10, 0)
 		baseplate.Material = Enum.Material.Grass
 		baseplate.Color = Color3.fromRGB(90, 165, 90)
@@ -66,6 +67,7 @@ local function configurePersistence()
 end
 
 ensureDevWorld()
+WorldBootstrap.ensureDevWorld()
 
 local services = ServerKernel.loadServices()
 

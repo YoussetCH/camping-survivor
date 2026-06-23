@@ -37,6 +37,7 @@ local en: LocaleTypes.LocaleTable = {
 	["ui.inventory.title"] = "Inventory",
 	["ui.inventory.use"] = "Use",
 	["ui.inventory.equip"] = "Equip",
+	["ui.inventory.unequip"] = "Unequip",
 
 	["ui.craft.title"] = "Crafting",
 	["ui.craft.craft_button"] = "Craft",
@@ -97,6 +98,22 @@ local en: LocaleTypes.LocaleTable = {
 	["camp.error.invalid_blueprint"] = "Invalid blueprint.",
 	["camp.error.invalid_rotation"] = "Invalid rotation.",
 	["camp.error.not_found"] = "Structure not found.",
+
+	["resource.prompt.gather"] = "Gather",
+	["resource.prompt.chop"] = "Chop",
+	["resource.prompt.node"] = "Resource",
+	["resource.success.harvest"] = "Harvested!",
+	["resource.error.too_far"] = "Too far from resource.",
+	["resource.error.depleted"] = "Resource depleted — come back later.",
+	["resource.error.no_tool"] = "You need an axe equipped.",
+	["resource.error.bag_full"] = "Inventory full.",
+	["resource.error.cooldown"] = "Wait before harvesting again.",
+	["resource.error.invalid_node"] = "Invalid resource.",
+
+	["ui.world.phase.day"] = "Day",
+	["ui.world.phase.night"] = "Night",
+	["ui.world.phase.dawn"] = "Dawn",
+	["ui.world.phase.dusk"] = "Dusk",
 }
 
 return en

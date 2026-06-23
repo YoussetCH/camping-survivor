@@ -361,7 +361,28 @@ local function equipTool(player: Player, bagSlotKey: unknown)
 		return
 	end
 
+	if data.equipped.toolItemId == slotItem.itemId then
+		data.equipped.toolItemId = nil
+		syncInventory(player, data)
+		return
+	end
+
 	data.equipped.toolItemId = slotItem.itemId
+	syncInventory(player, data)
+end
+
+local function unequipTool(player: Player)
+	if not canPerformAction(player) then
+		return
+	end
+
+	local data = PlayerDataService:GetData(player)
+
+	if data == nil or data.equipped.toolItemId == nil then
+		return
+	end
+
+	data.equipped.toolItemId = nil
 	syncInventory(player, data)
 end
 
@@ -469,6 +490,7 @@ function InventoryService:Init()
 	local trove = self:GetTrove()
 
 	trove:Connect(Networking.getEvent("EquipItemEvent").OnServerEvent, equipTool)
+	trove:Connect(Networking.getEvent("UnequipItemEvent").OnServerEvent, unequipTool)
 	trove:Connect(Networking.getEvent("SetHotbarSlotEvent").OnServerEvent, setHotbarSlot)
 	trove:Connect(Networking.getEvent("UseItemEvent").OnServerEvent, useItem)
 end

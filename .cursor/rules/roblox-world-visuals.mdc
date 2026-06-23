@@ -1,0 +1,34 @@
+---
+description: World props and structures must visually match what they represent
+alwaysApply: true
+---
+
+# Visual fidelity — world & gameplay props
+
+Every **visible gameplay element** MUST be recognizable at a glance: a tree looks like a tree, a bush like a bush, a stone like a stone, a chest like a chest.
+
+## When adding or changing world content
+
+MUST:
+
+- Use a **dedicated model builder** (`*Model.luau`, `ResourceNodeModelFactory`, feature model modules) — not a single colored Part as final art
+- Build a readable **silhouette** with 2+ parts (or MeshPart) and appropriate `Material` (Wood, Slate, Grass, LeafyGrass, etc.)
+- Reuse shared palettes from `StructureModelUtils` or the feature's model module
+- Put `PrimaryPart` on the interaction anchor; tag/logic attributes on the Model container
+- Support depleted/hidden states via `ResourceNodeModelFactory.setDepletedVisual` or equivalent — do not only toggle one cube
+
+MUST NOT:
+
+- Ship placeholder cubes/boxes/spheres as **final** art for harvestables, structures, fauna, POIs, or helpers
+- Hardcode one-off Part creation inside bootstrap/services when a builder module should own the shape
+
+## Patterns
+
+| Element | Module location |
+|---------|-----------------|
+| Resource nodes | `Shared/World/ResourceNodeModelFactory.luau` |
+| Camp structures | `Shared/Features/<Name>/<Name>Model.luau` |
+| Equipped tools | `Shared/Tools/EquippedToolModelFactory.luau` |
+| Future fauna / POIs | `Shared/Features/<Name>/` or `Shared/World/` builders |
+
+Temporary greybox is OK **only** if a task explicitly marks it temporary and lists art follow-up.

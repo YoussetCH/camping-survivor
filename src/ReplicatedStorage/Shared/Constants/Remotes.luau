@@ -11,6 +11,7 @@ local Remotes = {
 		"SetLocaleEvent",
 		"LocaleChangedEvent",
 		"EquipItemEvent",
+		"UnequipItemEvent",
 		"SetHotbarSlotEvent",
 		"UseItemEvent",
 		"CraftItemEvent",
@@ -23,6 +24,9 @@ local Remotes = {
 		"MoveStructureEvent",
 		"MoveStructureResultEvent",
 		"TransferItemEvent",
+		"HarvestResourceEvent",
+		"HarvestResourceResultEvent",
+		"WorldUpdatedEvent",
 	},
 	Functions = {},
 }

@@ -37,6 +37,7 @@ local es: LocaleTypes.LocaleTable = {
 	["ui.inventory.title"] = "Inventario",
 	["ui.inventory.use"] = "Usar",
 	["ui.inventory.equip"] = "Equipar",
+	["ui.inventory.unequip"] = "Desequipar",
 
 	["ui.craft.title"] = "Crafteo",
 	["ui.craft.craft_button"] = "Craftear",
@@ -97,6 +98,22 @@ local es: LocaleTypes.LocaleTable = {
 	["camp.error.invalid_blueprint"] = "Plano inválido.",
 	["camp.error.invalid_rotation"] = "Rotación inválida.",
 	["camp.error.not_found"] = "Estructura no encontrada.",
+
+	["resource.prompt.gather"] = "Recolectar",
+	["resource.prompt.chop"] = "Talar",
+	["resource.prompt.node"] = "Recurso",
+	["resource.success.harvest"] = "¡Recolectado!",
+	["resource.error.too_far"] = "Demasiado lejos del recurso.",
+	["resource.error.depleted"] = "Recurso agotado — vuelve más tarde.",
+	["resource.error.no_tool"] = "Necesitas un hacha equipada.",
+	["resource.error.bag_full"] = "Inventario lleno.",
+	["resource.error.cooldown"] = "Espera antes de recolectar de nuevo.",
+	["resource.error.invalid_node"] = "Recurso inválido.",
+
+	["ui.world.phase.day"] = "Día",
+	["ui.world.phase.night"] = "Noche",
+	["ui.world.phase.dawn"] = "Amanecer",
+	["ui.world.phase.dusk"] = "Atardecer",
 }
 
 return es

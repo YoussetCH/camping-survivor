@@ -1,0 +1,176 @@
+--!strict
+
+local CollectionService = game:GetService("CollectionService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
+local ResourceNodeModelFactory = require(ReplicatedStorage.Shared.World.ResourceNodeModelFactory)
+local WorldConstants = require(ReplicatedStorage.Shared.Constants.WorldConstants)
+
+export type WorldBootstrapModule = {
+	ensureDevWorld: () -> (),
+}
+
+local WorldBootstrap = {}
+
+local function getWorldFolder(): Folder
+	local existing = workspace:FindFirstChild("World")
+
+	if existing ~= nil and existing:IsA("Folder") then
+		return existing
+	end
+
+	local folder = Instance.new("Folder")
+	folder.Name = "World"
+	folder.Parent = workspace
+	return folder
+end
+
+local function getSubfolder(parent: Instance, name: string): Folder
+	local existing = parent:FindFirstChild(name)
+
+	if existing ~= nil and existing:IsA("Folder") then
+		return existing
+	end
+
+	local folder = Instance.new("Folder")
+	folder.Name = name
+	folder.Parent = parent
+	return folder
+end
+
+local function createBiomeZone(
+	parent: Folder,
+	name: string,
+	biomeId: string,
+	position: Vector3,
+	size: Vector3,
+	color: Color3
+): BasePart
+	local existing = parent:FindFirstChild(name)
+
+	if existing ~= nil and existing:IsA("BasePart") then
+		return existing
+	end
+
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.Transparency = 0.85
+	part.Size = size
+	part.Position = position
+	part.Color = color
+	part.Material = Enum.Material.Grass
+	part:SetAttribute(WorldConstants.BIOME_ID_ATTRIBUTE, biomeId)
+	CollectionService:AddTag(part, WorldConstants.BIOME_ZONE_TAG)
+	part.Parent = parent
+
+	return part
+end
+
+local function attachHarvestPrompt(interactPart: BasePart, nodeType: string)
+	local prompt = interactPart:FindFirstChild("HarvestPrompt")
+
+	if prompt == nil or not prompt:IsA("ProximityPrompt") then
+		prompt = Instance.new("ProximityPrompt")
+		prompt.Name = "HarvestPrompt"
+		prompt.Parent = interactPart
+	end
+
+	prompt.ActionText = "Harvest"
+	prompt.ObjectText = "Resource"
+	prompt.MaxActivationDistance = WorldConstants.HARVEST_MAX_DISTANCE_STUDS
+	prompt.HoldDuration = if nodeType == "chop" then 1.5 else 0.75
+	prompt.RequiresLineOfSight = false
+	prompt.Enabled = true
+end
+
+local function createResourceNode(
+	parent: Folder,
+	nodeId: string,
+	archetype: ResourceNodeModelFactory.NodeVisualArchetype,
+	nodeType: string,
+	outputs: string,
+	groundPosition: Vector3
+): Model
+	local existing = parent:FindFirstChild(nodeId)
+
+	if existing ~= nil then
+		if existing:IsA("Model") and existing.PrimaryPart ~= nil then
+			return existing
+		end
+
+		existing:Destroy()
+	end
+
+	local model = ResourceNodeModelFactory.build(archetype, groundPosition)
+	model.Name = nodeId
+	model:SetAttribute(WorldConstants.NODE_ID_ATTRIBUTE, nodeId)
+	model:SetAttribute(WorldConstants.NODE_TYPE_ATTRIBUTE, nodeType)
+	model:SetAttribute(WorldConstants.NODE_OUTPUTS_ATTRIBUTE, outputs)
+	model:SetAttribute(WorldConstants.NODE_DEPLETED_ATTRIBUTE, false)
+	CollectionService:AddTag(model, WorldConstants.RESOURCE_NODE_TAG)
+
+	local interactPart = model.PrimaryPart
+
+	if interactPart == nil then
+		error(`Resource node model "{nodeId}" is missing PrimaryPart`, 2)
+	end
+
+	attachHarvestPrompt(interactPart, nodeType)
+	model.Parent = parent
+
+	return model
+end
+
+function WorldBootstrap.ensureDevWorld()
+	local worldFolder = getWorldFolder()
+	local biomeZonesFolder = getSubfolder(worldFolder, "BiomeZones")
+	local resourceNodesFolder = getSubfolder(worldFolder, "ResourceNodes")
+
+	createBiomeZone(
+		biomeZonesFolder,
+		"forest_near",
+		"forest_near",
+		Vector3.new(102, -5, 64),
+		Vector3.new(520, 20, 520),
+		Color3.fromRGB(70, 130, 70)
+	)
+
+	createBiomeZone(
+		biomeZonesFolder,
+		"camp_hub",
+		"camp_hub",
+		Vector3.new(102, -5, 64),
+		Vector3.new(240, 20, 140),
+		Color3.fromRGB(110, 170, 110)
+	)
+
+	local nodeDefinitions = {
+		{ id = "berry_bush_01", archetype = "berry_bush", type = "gather", outputs = "berry:2-3", position = Vector3.new(260, 0, 64) },
+		{ id = "berry_bush_02", archetype = "berry_bush", type = "gather", outputs = "berry:2-3", position = Vector3.new(260, 0, 110) },
+		{ id = "stick_pile_01", archetype = "stick_pile", type = "gather", outputs = "stick:2", position = Vector3.new(-80, 0, 64) },
+		{ id = "stone_pile_01", archetype = "stone_pile", type = "gather", outputs = "stone:2", position = Vector3.new(-80, 0, 110) },
+		{ id = "leaf_patch_01", archetype = "leaf_patch", type = "gather", outputs = "leaf:2-3", position = Vector3.new(-80, 0, 20) },
+		{ id = "tree_small_01", archetype = "tree_small", type = "chop", outputs = "wood:3,stick:1", position = Vector3.new(300, 0, 40) },
+		{ id = "tree_small_02", archetype = "tree_small", type = "chop", outputs = "wood:3,stick:1", position = Vector3.new(-120, 0, 40) },
+	}
+
+	for _, nodeInfo in nodeDefinitions do
+		createResourceNode(
+			resourceNodesFolder,
+			nodeInfo.id,
+			nodeInfo.archetype,
+			nodeInfo.type,
+			nodeInfo.outputs,
+			nodeInfo.position
+		)
+	end
+
+	Logger.info("WorldBootstrap", `Dev world ready with {#nodeDefinitions} resource nodes`)
+end
+
+return WorldBootstrap

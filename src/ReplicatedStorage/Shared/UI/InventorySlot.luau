@@ -1,8 +1,10 @@
 --!strict
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local ItemIcon = require(ReplicatedStorage.Shared.UI.ItemIcon)
+local ItemTooltip = require(ReplicatedStorage.Shared.UI.ItemTooltip)
 
 export type InventorySlotConfig = {
 	slotKey: string?,
@@ -85,6 +87,14 @@ function InventorySlotModule.create(parent: Instance, config: InventorySlotConfi
 	local bagSlotKey: string? = config.slotKey
 	local isEquipped = false
 	local isSelected = false
+	local tooltipText: string? = nil
+	local unbindTooltip: (() -> ())? = nil
+
+	if RunService:IsClient() then
+		unbindTooltip = ItemTooltip.bind(root, function()
+			return tooltipText
+		end)
+	end
 
 	local function refreshBackground()
 		if isEquipped then
@@ -106,6 +116,7 @@ function InventorySlotModule.create(parent: Instance, config: InventorySlotConfi
 			nameLabel.Text = ""
 			nameLabel.Visible = false
 			quantityLabel.Text = ""
+			tooltipText = nil
 			ItemIcon.applyTo(iconImage, nil)
 			refreshBackground()
 			return
@@ -115,7 +126,7 @@ function InventorySlotModule.create(parent: Instance, config: InventorySlotConfi
 		nameLabel.Text = displayName or itemId
 		nameLabel.Visible = not iconImage.Visible
 		quantityLabel.Text = if quantity > 1 then tostring(quantity) else ""
-		root:SetAttribute("Tooltip", displayName or itemId)
+		tooltipText = displayName or itemId
 	end
 
 	function self.setSelected(_self: InventorySlot, selected: boolean)
@@ -129,6 +140,11 @@ function InventorySlotModule.create(parent: Instance, config: InventorySlotConfi
 	end
 
 	function self.destroy(_self: InventorySlot)
+		if unbindTooltip ~= nil then
+			unbindTooltip()
+			unbindTooltip = nil
+		end
+
 		root:Destroy()
 	end
 

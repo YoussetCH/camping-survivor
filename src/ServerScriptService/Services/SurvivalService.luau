@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local BaseService = require(ServerScriptService.Kernel.BaseService)
+local BiomeService = require(ServerScriptService.Services.BiomeService)
 local GameEvents = require(ServerScriptService.Features.GameEvents)
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local InventoryService = require(ServerScriptService.Services.InventoryService)
@@ -158,7 +159,7 @@ local function processPlayerTick(player: Player, tickMinutes: number)
 
 	local previousStats = table.clone(data.survival)
 	local survival = data.survival
-	local ambient = SurvivalConstants.DEFAULT_AMBIENT_TEMPERATURE
+	local ambient = BiomeService.getAmbientForPlayer(player)
 
 	survival.hunger -= SurvivalConstants.HUNGER_DRAIN_PER_MINUTE * tickMinutes
 	survival.thirst -= SurvivalConstants.THIRST_DRAIN_PER_MINUTE * tickMinutes

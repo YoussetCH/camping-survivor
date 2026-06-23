@@ -4,7 +4,7 @@
     "Anchored": true,
     "BottomSurface": "Smooth",
     "TopSurface": "Smooth",
-    "Size": [512, 20, 512],
+    "Size": [800, 20, 800],
     "Position": [0, -10, 0],
     "Color": [0.352941, 0.647059, 0.352941],
     "Material": "Grass",

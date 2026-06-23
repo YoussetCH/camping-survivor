@@ -153,6 +153,38 @@ The client SHALL provide a toggleable chest panel when the player interacts with
 - THEN the client fires `TransferItemEvent` with slot keys only
 - AND the client does not mutate chest or bag data locally
 
+### Requirement: Resource harvest feedback
+
+The client SHALL display harvest results from `HarvestResourceResultEvent` using localization keys. Success and error feedback MUST NOT mutate inventory locally.
+
+#### Scenario: Successful harvest toast
+
+- GIVEN the player triggers a harvest prompt
+- WHEN the server responds with `success = true`
+- THEN the client shows a localized success message
+
+#### Scenario: Error toast
+
+- GIVEN the server responds with `reasonKey = "resource.error.depleted"`
+- WHEN the client receives `HarvestResourceResultEvent`
+- THEN the client shows the localized error for that key
+
+### Requirement: Day/night HUD indicator
+
+The client SHALL display a passive day/night phase indicator updated from `WorldUpdatedEvent`.
+
+#### Scenario: Phase icon updates
+
+- GIVEN the server broadcasts phase `night`
+- WHEN `WorldController` receives `WorldUpdatedEvent`
+- THEN the HUD shows the night phase indicator
+
+#### Scenario: Localization on phase label
+
+- GIVEN the HUD shows a phase label
+- WHEN the player changes locale
+- THEN the label uses keys `ui.world.phase.*` in the active locale
+
 ## Localization
 
 - Default locale: `en`

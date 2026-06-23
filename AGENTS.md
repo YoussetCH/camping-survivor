@@ -9,6 +9,7 @@ This project follows enterprise-grade Roblox architecture and **OpenSpec-compati
 | [docs/GDD-Camping-Survivor.md](docs/GDD-Camping-Survivor.md) | Product spec (what the game is) |
 | [docs/Implementation-Plan.md](docs/Implementation-Plan.md) | Slice index and dependencies |
 | [docs/Feature-Modules.md](docs/Feature-Modules.md) | **Modular features & components** (isolation, registries, checklists) |
+| [.cursor/rules/roblox-world-visuals.mdc](.cursor/rules/roblox-world-visuals.mdc) | **Visual fidelity** — trees, stones, props must look like what they are |
 | [docs/Item-Icons.md](docs/Item-Icons.md) | Add or change inventory/crafting item icons |
 | [openspec/config.yaml](openspec/config.yaml) | AI context, capabilities map |
 | [openspec/specs/](openspec/specs/) | Living technical specs per capability |

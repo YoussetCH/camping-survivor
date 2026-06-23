@@ -22,6 +22,7 @@ local INIT_ORDER = {
 	"CraftingHUDController",
 	"BuildingController",
 	"ChestController",
+	"EquippedToolController",
 	"UIController",
 }
 

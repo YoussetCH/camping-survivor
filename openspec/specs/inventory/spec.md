@@ -160,6 +160,24 @@ Camp chest storage SHALL use up to **24** slots keyed `"1"` through `"24"` per c
 - WHEN the server deposits `stick` × 2 into that slot
 - THEN slot `"1"` becomes `stick` × 30
 
+### Requirement: Resource harvest grant
+
+The system SHALL grant items to the player's bag when `ResourceService` validates a successful harvest. Grants MUST respect stack limits and bag capacity; failed grants MUST NOT deplete the node.
+
+#### Scenario: Grant after harvest
+
+- GIVEN a valid harvest of `stick` × 2 and bag has space
+- WHEN `ResourceService` completes validation
+- THEN bag receives `stick` × 2
+- AND `InventoryUpdatedEvent` fires with the full snapshot
+
+#### Scenario: Partial stack merge
+
+- GIVEN bag slot `"1"` contains `berry` × 28 (maxStack 30)
+- WHEN harvest grants `berry` × 3
+- THEN slot `"1"` becomes `berry` × 30
+- AND remaining `berry` × 1 fills another slot or fails the harvest if no slot remains
+
 ## Related
 
 - [foundation/spec.md](../foundation/spec.md) — profile schema
