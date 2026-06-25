@@ -167,6 +167,15 @@ local function canSpeciesAggress(definition: FaunaTypes.FaunaSpeciesDefinition):
 	return phase == "night" or phase == "dusk"
 end
 
+local function getEffectiveDetectRange(definition: FaunaTypes.FaunaSpeciesDefinition): number
+	local phase = DayNightService.getPhase()
+	if (phase == "night" or phase == "dusk") and definition.detectRangeNightStuds ~= nil then
+		return math.max(definition.detectRangeStuds, definition.detectRangeNightStuds)
+	end
+
+	return definition.detectRangeStuds
+end
+
 local function findNearestPlayer(fauna: FaunaInstance, maxRange: number): (Player?, number)
 	local root = getFaunaRoot(fauna)
 	if root == nil then
@@ -297,7 +306,7 @@ local function processFauna(fauna: FaunaInstance)
 	end
 
 	local definition = behavior.definition
-	local nearestPlayer, nearestDistance = findNearestPlayer(fauna, definition.detectRangeStuds)
+	local nearestPlayer, nearestDistance = findNearestPlayer(fauna, getEffectiveDetectRange(definition))
 
 	if nearestPlayer == nil then
 		fauna.state = "patrol"

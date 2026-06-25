@@ -18,6 +18,7 @@ export type FaunaSpeciesDefinition = {
 	maxHp: number,
 	damage: number,
 	detectRangeStuds: number,
+	detectRangeNightStuds: number?,
 	meleeRangeStuds: number,
 	attackCooldownSeconds: number,
 	attackWindupSeconds: number?,

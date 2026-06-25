@@ -3,6 +3,7 @@
 local Lighting = game:GetService("Lighting")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local BaseService = require(ServerScriptService.Kernel.BaseService)
@@ -14,11 +15,28 @@ local WorldTypes = require(ReplicatedStorage.Shared.Types.World)
 local DayNightService = BaseService.new("DayNightService")
 
 local cycleStartedAt = os.clock()
+local cycleSpeedMultiplier = 1
 local lastBroadcastPhase: WorldTypes.WorldPhase? = nil
 local syncThread: thread? = nil
 
 local function getCycleElapsed(): number
-	return (os.clock() - cycleStartedAt) % WorldConstants.CYCLE_SECONDS
+	return ((os.clock() - cycleStartedAt) * cycleSpeedMultiplier) % WorldConstants.CYCLE_SECONDS
+end
+
+local function getElapsedForPhase(phase: WorldTypes.WorldPhase): number
+	if phase == "night" then
+		return WorldConstants.DAY_SECONDS + WorldConstants.TRANSITION_SECONDS + 1
+	end
+
+	if phase == "dusk" then
+		return WorldConstants.DAY_SECONDS - (WorldConstants.TRANSITION_SECONDS * 0.5)
+	end
+
+	if phase == "dawn" then
+		return WorldConstants.DAY_SECONDS + WorldConstants.NIGHT_SECONDS - (WorldConstants.TRANSITION_SECONDS * 0.5)
+	end
+
+	return WorldConstants.DAY_SECONDS * 0.5
 end
 
 local function getPhaseAndProgress(): (WorldTypes.WorldPhase, number)
@@ -87,6 +105,48 @@ local function broadcastSnapshot(force: boolean?)
 	worldUpdatedEvent:FireAllClients(snapshot)
 end
 
+local function handleDebugChatCommand(message: string)
+	if not RunService:IsStudio() then
+		return
+	end
+
+	local lowered = string.lower(message)
+	if lowered == "/night" then
+		DayNightService.debugSetPhase("night")
+		return
+	end
+
+	if lowered == "/dusk" then
+		DayNightService.debugSetPhase("dusk")
+		return
+	end
+
+	if lowered == "/dawn" then
+		DayNightService.debugSetPhase("dawn")
+		return
+	end
+
+	if lowered == "/day" then
+		DayNightService.debugSetPhase("day")
+		return
+	end
+
+	if string.sub(lowered, 1, 11) == "/timescale " then
+		local value = tonumber(string.sub(lowered, 12))
+		if value ~= nil then
+			DayNightService.debugSetCycleSpeed(value)
+		end
+		return
+	end
+
+	if string.sub(lowered, 1, 12) == "/cyclespeed " then
+		local value = tonumber(string.sub(lowered, 13))
+		if value ~= nil then
+			DayNightService.debugSetCycleSpeed(value)
+		end
+	end
+end
+
 function DayNightService.getPhase(): WorldTypes.WorldPhase
 	local phase, _ = getPhaseAndProgress()
 	return phase
@@ -96,8 +156,37 @@ function DayNightService.getSnapshot(): WorldTypes.WorldSnapshot
 	return buildSnapshot()
 end
 
+-- Studio-only helpers for quick gameplay testing.
+function DayNightService.debugSetPhase(phase: WorldTypes.WorldPhase): boolean
+	if not RunService:IsStudio() then
+		return false
+	end
+
+	local elapsed = getElapsedForPhase(phase)
+	cycleStartedAt = os.clock() - (elapsed / cycleSpeedMultiplier)
+	broadcastSnapshot(true)
+	return true
+end
+
+function DayNightService.debugSetCycleSpeed(multiplier: number): boolean
+	if not RunService:IsStudio() then
+		return false
+	end
+
+	if multiplier <= 0 then
+		return false
+	end
+
+	local currentElapsed = getCycleElapsed()
+	cycleSpeedMultiplier = multiplier
+	cycleStartedAt = os.clock() - (currentElapsed / cycleSpeedMultiplier)
+	broadcastSnapshot(true)
+	return true
+end
+
 function DayNightService:Init()
 	cycleStartedAt = os.clock()
+	cycleSpeedMultiplier = 1
 	lastBroadcastPhase = nil
 end
 
@@ -110,9 +199,13 @@ function DayNightService:Start()
 	end
 
 	trove:Connect(Players.PlayerAdded, sendToPlayer)
+	trove:Connect(Players.PlayerAdded, function(player: Player)
+		trove:Connect(player.Chatted, handleDebugChatCommand)
+	end)
 
 	for _, player in Players:GetPlayers() do
 		task.defer(sendToPlayer, player)
+		trove:Connect(player.Chatted, handleDebugChatCommand)
 	end
 
 	broadcastSnapshot(true)

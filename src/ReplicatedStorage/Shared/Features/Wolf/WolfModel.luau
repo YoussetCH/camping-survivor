@@ -6,6 +6,10 @@ local WOLF_BELLY = Color3.fromRGB(145, 140, 130)
 local WOLF_DARK = Color3.fromRGB(45, 45, 52)
 local WOLF_NOSE = Color3.fromRGB(30, 30, 35)
 local WOLF_EYE = Color3.fromRGB(200, 50, 45)
+local WOLF_GROWL_SOUND_ID = "rbxassetid://139412217660571"
+
+-- Head motor: local offset from root to head pivot
+local HEAD_OFFSET = CFrame.new(0, 0.5, -2.75)
 
 local function weld(part: BasePart, root: BasePart)
 	local weldConstraint = Instance.new("WeldConstraint")
@@ -38,6 +42,30 @@ local function addPart(
 	part.Parent = model
 	weld(part, root)
 	return part
+end
+
+-- Returns the head part and creates a Motor6D so we can animate it
+local function addHeadWithMotor(model: Model, root: BasePart): Part
+	local head = Instance.new("Part")
+	head.Name = "Head"
+	head.Size = Vector3.new(1.45, 1.25, 1.55)
+	head.Color = WOLF_SIDE
+	head.Material = Enum.Material.Fabric
+	head.Anchored = false
+	head.CanCollide = true
+	head.CanQuery = true
+	head.CFrame = root.CFrame * HEAD_OFFSET
+	head.Parent = model
+
+	local motor = Instance.new("Motor6D")
+	motor.Name = "HeadMotor"
+	motor.Part0 = root
+	motor.Part1 = head
+	motor.C0 = HEAD_OFFSET
+	motor.C1 = CFrame.new(0, 0, 0)
+	motor.Parent = root
+
+	return head
 end
 
 local function addLeg(
@@ -85,47 +113,64 @@ local function addLeg(
 	return leg
 end
 
+local function addGrowlSound(model: Model, root: BasePart)
+	local sound = Instance.new("Sound")
+	sound.Name = "Growl"
+	sound.SoundId = WOLF_GROWL_SOUND_ID
+	sound.Volume = 0.8
+	sound.RollOffMaxDistance = 70
+	sound.RollOffMode = Enum.RollOffMode.InverseTapered
+	sound.Parent = root
+end
+
+local function playGrowlSound(model: Model)
+	local sound = model:FindFirstChild("Growl", true)
+	if sound ~= nil and sound:IsA("Sound") then
+		sound:Play()
+	end
+end
+
 local function build(groundPosition: Vector3): Model
 	local model = Instance.new("Model")
 	model.Name = "Wolf"
 
 	local root = Instance.new("Part")
 	root.Name = "BodyAnchor"
-	root.Size = Vector3.new(1.3, 0.95, 3.2)
+	root.Size = Vector3.new(1.75, 1.25, 4.2)
 	root.Color = WOLF_SIDE
 	root.Material = Enum.Material.Fabric
 	root.Anchored = true
 	root.CanCollide = true
 	root.CanQuery = true
-	root.CFrame = CFrame.new(groundPosition + Vector3.new(0, 0.85, 0))
+	root.CFrame = CFrame.new(groundPosition + Vector3.new(0, 1.15, 0))
 	root.Parent = model
 	model.PrimaryPart = root
 
-	addPart(model, root, "Chest", Vector3.new(1.45, 1.05, 1.2), CFrame.new(0, 0.15, -1.05), WOLF_SIDE, Enum.Material.Fabric, true)
-	addPart(model, root, "Back", Vector3.new(1.2, 0.75, 1.4), CFrame.new(0, 0.35, 0.55), WOLF_BACK, Enum.Material.Fabric, false)
-	addPart(model, root, "Belly", Vector3.new(1.05, 0.25, 2.6), CFrame.new(0, -0.42, 0.1), WOLF_BELLY, Enum.Material.SmoothPlastic, false)
+	addPart(model, root, "Chest", Vector3.new(1.95, 1.45, 1.55), CFrame.new(0, 0.2, -1.4), WOLF_SIDE, Enum.Material.Fabric, true)
+	addPart(model, root, "Back", Vector3.new(1.65, 1.05, 1.9), CFrame.new(0, 0.45, 0.8), WOLF_BACK, Enum.Material.Fabric, false)
+	addPart(model, root, "Belly", Vector3.new(1.45, 0.34, 3.4), CFrame.new(0, -0.57, 0.2), WOLF_BELLY, Enum.Material.SmoothPlastic, false)
 
-	addPart(model, root, "Head", Vector3.new(1.05, 0.95, 1.15), CFrame.new(0, 0.35, -2.05), WOLF_SIDE, Enum.Material.Fabric, true)
-	addPart(model, root, "Snout", Vector3.new(0.55, 0.42, 0.95), CFrame.new(0, -0.05, -2.85), WOLF_BELLY, Enum.Material.SmoothPlastic, true)
-	addPart(model, root, "Nose", Vector3.new(0.28, 0.22, 0.22), CFrame.new(0, 0, -3.35), WOLF_NOSE, Enum.Material.SmoothPlastic, false)
+	-- Head via Motor6D so it can tilt during attack
+	local head = addHeadWithMotor(model, root)
+	addPart(model, head, "Snout", Vector3.new(0.78, 0.56, 1.35), CFrame.new(0, -0.42, -0.85), WOLF_BELLY, Enum.Material.SmoothPlastic, true)
+	addPart(model, head, "Nose", Vector3.new(0.38, 0.3, 0.3), CFrame.new(0, -0.38, -1.55), WOLF_NOSE, Enum.Material.SmoothPlastic, false)
+	addPart(model, head, "EarLeft", Vector3.new(0.3, 0.78, 0.24), CFrame.new(-0.58, 0.55, -0.3) * CFrame.Angles(0, 0, math.rad(20)), WOLF_DARK, Enum.Material.Fabric, false)
+	addPart(model, head, "EarRight", Vector3.new(0.3, 0.78, 0.24), CFrame.new(0.58, 0.55, -0.3) * CFrame.Angles(0, 0, math.rad(-20)), WOLF_DARK, Enum.Material.Fabric, false)
+	addPart(model, head, "EyeLeft", Vector3.new(0.2, 0.2, 0.2), CFrame.new(-0.38, 0.1, -0.7), WOLF_EYE, Enum.Material.Neon, false, Enum.PartType.Ball)
+	addPart(model, head, "EyeRight", Vector3.new(0.2, 0.2, 0.2), CFrame.new(0.38, 0.1, -0.7), WOLF_EYE, Enum.Material.Neon, false, Enum.PartType.Ball)
 
-	addPart(model, root, "EarLeft", Vector3.new(0.22, 0.55, 0.18), CFrame.new(-0.42, 0.72, -1.85) * CFrame.Angles(0, 0, math.rad(18)), WOLF_DARK, Enum.Material.Fabric, false)
-	addPart(model, root, "EarRight", Vector3.new(0.22, 0.55, 0.18), CFrame.new(0.42, 0.72, -1.85) * CFrame.Angles(0, 0, math.rad(-18)), WOLF_DARK, Enum.Material.Fabric, false)
+	local legSize = Vector3.new(0.52, 1.45, 0.56)
+	local pawSize = Vector3.new(0.58, 0.24, 0.66)
 
-	local legSize = Vector3.new(0.38, 1.05, 0.42)
-	local pawSize = Vector3.new(0.42, 0.18, 0.48)
+	addLeg(model, root, "LegFrontLeftMotor", "LegFrontLeft", "PawFrontLeft", CFrame.new(-0.62, -0.42, -1.35), legSize, pawSize, WOLF_DARK)
+	addLeg(model, root, "LegFrontRightMotor", "LegFrontRight", "PawFrontRight", CFrame.new(0.62, -0.42, -1.35), legSize, pawSize, WOLF_DARK)
+	addLeg(model, root, "LegBackLeftMotor", "LegBackLeft", "PawBackLeft", CFrame.new(-0.62, -0.42, 1.35), legSize, pawSize, WOLF_DARK)
+	addLeg(model, root, "LegBackRightMotor", "LegBackRight", "PawBackRight", CFrame.new(0.62, -0.42, 1.35), legSize, pawSize, WOLF_DARK)
 
-	addLeg(model, root, "LegFrontLeftMotor", "LegFrontLeft", "PawFrontLeft", CFrame.new(-0.48, -0.35, -1.05), legSize, pawSize, WOLF_DARK)
-	addLeg(model, root, "LegFrontRightMotor", "LegFrontRight", "PawFrontRight", CFrame.new(0.48, -0.35, -1.05), legSize, pawSize, WOLF_DARK)
-	addLeg(model, root, "LegBackLeftMotor", "LegBackLeft", "PawBackLeft", CFrame.new(-0.48, -0.35, 1.05), legSize, pawSize, WOLF_DARK)
-	addLeg(model, root, "LegBackRightMotor", "LegBackRight", "PawBackRight", CFrame.new(0.48, -0.35, 1.05), legSize, pawSize, WOLF_DARK)
+	addPart(model, root, "TailBase", Vector3.new(0.48, 0.48, 1.15), CFrame.new(0, 0.35, 2.35), WOLF_BACK, Enum.Material.Fabric, false)
+	addPart(model, root, "TailTip", Vector3.new(0.36, 0.36, 1), CFrame.new(0, 0.58, 3.25), WOLF_DARK, Enum.Material.Fabric, false)
 
-	addPart(model, root, "TailBase", Vector3.new(0.35, 0.35, 0.85), CFrame.new(0, 0.25, 1.75), WOLF_BACK, Enum.Material.Fabric, false)
-	addPart(model, root, "TailTip", Vector3.new(0.28, 0.28, 0.75), CFrame.new(0, 0.45, 2.45), WOLF_DARK, Enum.Material.Fabric, false)
-
-	addPart(model, root, "EyeLeft", Vector3.new(0.14, 0.14, 0.14), CFrame.new(-0.28, 0.45, -2.45), WOLF_EYE, Enum.Material.Neon, false, Enum.PartType.Ball)
-	addPart(model, root, "EyeRight", Vector3.new(0.14, 0.14, 0.14), CFrame.new(0.28, 0.45, -2.45), WOLF_EYE, Enum.Material.Neon, false, Enum.PartType.Ball)
-
+	addGrowlSound(model, root)
 	model:SetAttribute("WalkAnimated", true)
 
 	return model
@@ -133,4 +178,5 @@ end
 
 return {
 	build = build,
+	playGrowlSound = playGrowlSound,
 }
