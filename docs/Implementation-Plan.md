@@ -4,6 +4,7 @@
 > **Product spec:** [GDD-Camping-Survivor.md](./GDD-Camping-Survivor.md) v1.2  
 > **Idiomas:** English (default) · Español — extensible ([§1.11](./GDD-Camping-Survivor.md#111-localización-e-idiomas))
 > **Specs técnicas:** [`openspec/specs/`](../openspec/specs/)  
+> **Combate fauna (tecnico):** [Fauna-Combat.md](./Fauna-Combat.md)  
 > **Slice activo:** `—`  
 > **Último completado:** [`archive/2026-06-25-slice-07-fauna`](../openspec/changes/archive/2026-06-25-slice-07-fauna/)
 
