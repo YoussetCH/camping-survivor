@@ -21,7 +21,7 @@
 5. [ ] Use bandage — bleeding icon clears; HP increases slightly
 6. [ ] Equip `stone_axe`, click/attack wolf — wolf HP bar decreases; wolf dies after enough hits
 7. [ ] Wolf death — `fiber` may appear in bag (50% roll)
-8. [ ] Snake ambush — snake reveals and applies `poison`; HP drains over time
+8. [ ] Snake ambush — snake reveals, raises head cobra-style before strike, applies `poison`; HP drains over time
 9. [ ] Use antidote — poison icon clears
 10. [ ] Attack from >10 studs — no damage (server rejects)
 11. [ ] Attack without tool — no damage

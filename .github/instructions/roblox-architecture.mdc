@@ -1,0 +1,35 @@
+---
+applyTo: '**'
+description: Architecture rules
+alwaysApply: true
+---
+
+Before generating code:
+
+1. Design architecture.
+2. Define services.
+3. Define controllers.
+4. Define remotes.
+5. Define shared modules.
+6. Explain networking flow.
+7. Generate implementation.
+
+Use:
+
+Service Layer
+Controller Layer
+Shared Layer
+Feature Modules (pluggable elements — see roblox-feature-modules.mdc)
+
+Business logic belongs only in Services (or Feature Behaviors on the server).
+
+Orchestrator services (e.g. CampService) MUST delegate feature-specific logic to registries — never inline `if featureId == ...`.
+
+Controllers:
+
+- UI
+- Input
+- Camera
+- Sound
+
+Never place business logic inside controllers.

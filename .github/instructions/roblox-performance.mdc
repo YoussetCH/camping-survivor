@@ -1,0 +1,29 @@
+---
+applyTo: '**'
+description: Performance standards
+alwaysApply: true
+---
+
+Performance Rules
+
+Avoid:
+
+- while true loops
+- memory leaks
+- excessive connections
+- unnecessary remotes
+
+Always:
+
+- Disconnect events
+- Cleanup resources
+- Cache references
+- Batch operations
+
+Think about:
+
+100 players
+500 NPCs
+1000 inventory items
+
+Optimize for scalability.

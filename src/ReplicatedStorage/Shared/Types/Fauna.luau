@@ -20,6 +20,8 @@ export type FaunaSpeciesDefinition = {
 	detectRangeStuds: number,
 	meleeRangeStuds: number,
 	attackCooldownSeconds: number,
+	attackWindupSeconds: number?,
+	attackAnimationSeconds: number?,
 	moveSpeedStuds: number,
 	statusOnHit: { FaunaStatusOnHit },
 	drops: { FaunaDropDefinition },
@@ -41,6 +43,8 @@ export type FaunaBehaviorModule = {
 	definition: FaunaSpeciesDefinition,
 	buildModel: (groundPosition: Vector3) -> Model,
 	onReveal: ((model: Model) -> ())?,
+	onAttackTelegraphStart: ((model: Model, definition: FaunaSpeciesDefinition) -> ())?,
+	onAttackTelegraphEnd: ((model: Model) -> ())?,
 }
 
 return {}

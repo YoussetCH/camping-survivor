@@ -11,6 +11,7 @@ local ClientKernel = require(script.Parent.Parent.Kernel.ClientKernel)
 local FaunaConstants = require(ReplicatedStorage.Shared.Constants.FaunaConstants)
 local Networking = require(ReplicatedStorage.Shared.Networking.Networking)
 local FaunaWalkAnimation = require(ReplicatedStorage.Shared.World.FaunaWalkAnimation)
+local SnakeAnimation = require(ReplicatedStorage.Shared.World.SnakeAnimation)
 local FaunaTypes = require(ReplicatedStorage.Shared.Types.Fauna)
 local Localization = require(ReplicatedStorage.Shared.Localization.Localization)
 local ResourceNodesConstants = require(ReplicatedStorage.Shared.Constants.ResourceNodesConstants)
@@ -473,8 +474,23 @@ function FaunaController:Start()
 
 			local moved = (root.Position - state.lastPosition).Magnitude
 			local isMoving = moved > 0.05
-			state.walkPhase = FaunaWalkAnimation.advancePhase(state.walkPhase, deltaTime, isMoving)
-			FaunaWalkAnimation.update(model, state.walkPhase, isMoving)
+			local speciesId = model:GetAttribute(FaunaConstants.FAUNA_SPECIES_ATTRIBUTE)
+
+			if speciesId == "snake" and SnakeAnimation.isSnakeCapable(model) then
+				local attackAlpha = 0
+				local attackStartedAt = model:GetAttribute(FaunaConstants.SNAKE_ATTACK_STARTED_AT_ATTRIBUTE)
+				local attackDuration = model:GetAttribute(FaunaConstants.SNAKE_ATTACK_DURATION_ATTRIBUTE)
+
+				if type(attackStartedAt) == "number" and type(attackDuration) == "number" and attackDuration > 0 then
+					attackAlpha = math.clamp((workspace:GetServerTimeNow() - attackStartedAt) / attackDuration, 0, 1)
+				end
+
+				state.walkPhase = SnakeAnimation.advancePhase(state.walkPhase, deltaTime, isMoving)
+				SnakeAnimation.update(model, state.walkPhase, isMoving, attackAlpha)
+			else
+				state.walkPhase = FaunaWalkAnimation.advancePhase(state.walkPhase, deltaTime, isMoving)
+				FaunaWalkAnimation.update(model, state.walkPhase, isMoving)
+			end
 			state.lastPosition = root.Position
 		end
 	end)

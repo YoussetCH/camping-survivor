@@ -62,6 +62,13 @@ When fauna attacks a player in melee range, the server SHALL apply species damag
 - THEN player loses 8 HP
 - AND `poison` is always applied
 
+#### Scenario: Snake cobra telegraph
+
+- GIVEN a snake starts a melee attack in range
+- WHEN the attack begins
+- THEN the snake visibly raises its head before damage resolves
+- AND the strike lunge occurs after a short windup on the server
+
 ### Requirement: Player attack on fauna
 
 The system SHALL process player attacks only through `AttackFaunaEvent`. The server MUST validate fauna exists, player within **10 studs**, tool equipped, and per-player cooldown **1 s**. Each valid hit SHALL deal **10 HP** to fauna (v0.1 axe damage).

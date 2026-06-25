@@ -1,0 +1,21 @@
+---
+applyTo: '**'
+description: Luau type safety
+alwaysApply: true
+---
+
+All code must use strict typing.
+
+Every shared model must export a type.
+
+Example:
+
+export type Item = {
+    id: string,
+    name: string,
+    rarity: string
+}
+
+Avoid any.
+
+Prefer explicit typing.

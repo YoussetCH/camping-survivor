@@ -1,0 +1,55 @@
+---
+applyTo: '**'
+description: OpenSpec workflow for Camping Survivor (slash commands + CLI)
+alwaysApply: true
+---
+
+# OpenSpec workflow (required)
+
+Use the **official OpenSpec slash commands** in Cursor. Do not implement gameplay without an active change.
+
+## Slash commands (primary)
+
+| Command | When |
+|---------|------|
+| `/opsx:propose <idea>` | New slice or feature — creates change + all artifacts |
+| `/opsx:apply` | Implement `tasks.md` for the active change |
+| `/opsx:archive` | After verify + user approval — merge specs and archive |
+| `/opsx:explore` | Optional — investigate before proposing |
+
+Default schema: **`roblox-slice`** (set in `openspec/config.yaml`).
+
+## Before writing code
+
+1. Confirm active change: `openspec list` or `openspec/config.yaml` → `workflow.active_change`
+2. Run `openspec status --change <name>` — all artifacts must be done before apply
+3. For apply: `openspec instructions apply --change <name> --json` then read `contextFiles`
+4. Read capability specs in `openspec/specs/` and relevant GDD chapter
+
+## During implementation (`/opsx:apply`)
+
+- Follow `tasks.md` in order; mark `- [x]` immediately after each task
+- Register remotes in `Remotes.luau` + Rojo RemoteEvent instances
+- Services = business logic; Controllers = UI/input only; Repositories = ProfileStore only
+- New features/components = isolated modules (`roblox-feature-modules.mdc`, `docs/Feature-Modules.md`)
+- Player-visible strings = localization keys (`roblox-i18n.mdc`); default `en`
+
+## After implementation
+
+- Complete every item in `verify.md`
+- `openspec validate <change-name>`
+- User approves → `/opsx:archive` (or `openspec archive <name> -y`)
+- Update `workflow.active_change` to next slice in Implementation-Plan
+
+## CLI reference
+
+```bash
+openspec new change <name>              # uses schema from config.yaml
+openspec status --change <name> --json
+openspec instructions apply --change <name> --json
+openspec validate <name>
+openspec archive <name> -y
+openspec update                         # refresh Cursor slash commands
+```
+
+Never implement gameplay without a spec delta in the change folder.

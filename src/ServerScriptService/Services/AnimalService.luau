@@ -224,7 +224,8 @@ local function moveFaunaToward(fauna: FaunaInstance, targetPosition: Vector3, sp
 	fauna.humanoid:MoveTo(Vector3.new(targetPosition.X, root.Position.Y, targetPosition.Z))
 end
 
-local function tryAttackPlayer(fauna: FaunaInstance, player: Player, definition: FaunaTypes.FaunaSpeciesDefinition)
+local function tryAttackPlayer(fauna: FaunaInstance, player: Player, behavior: FaunaTypes.FaunaBehaviorModule)
+	local definition = behavior.definition
 	local now = os.clock()
 	if now - fauna.lastAttackAt < definition.attackCooldownSeconds then
 		return
@@ -242,12 +243,56 @@ local function tryAttackPlayer(fauna: FaunaInstance, player: Player, definition:
 
 	fauna.lastAttackAt = now
 	fauna.state = "attack"
+	local attackWindupSeconds = definition.attackWindupSeconds or 0
+	local attackAnimationSeconds = definition.attackAnimationSeconds or attackWindupSeconds
+
+	if attackWindupSeconds > 0 then
+		if behavior.onAttackTelegraphStart ~= nil then
+			behavior.onAttackTelegraphStart(fauna.model, definition)
+		end
+
+		task.delay(attackWindupSeconds, function()
+			local currentFauna = faunaInstances[fauna.faunaId]
+			if currentFauna == nil or currentFauna.hp <= 0 then
+				return
+			end
+
+			local delayedFaunaRoot = getFaunaRoot(currentFauna)
+			local delayedPlayerRoot = getCharacterRoot(player)
+			if delayedFaunaRoot == nil or delayedPlayerRoot == nil then
+				return
+			end
+
+			if (delayedFaunaRoot.Position - delayedPlayerRoot.Position).Magnitude > definition.meleeRangeStuds + 1 then
+				return
+			end
+
+			SurvivalService.applyDamage(player, definition.damage, rollStatusEffects(definition))
+		end)
+
+		if behavior.onAttackTelegraphEnd ~= nil and attackAnimationSeconds > 0 then
+			task.delay(attackAnimationSeconds, function()
+				local currentFauna = faunaInstances[fauna.faunaId]
+				if currentFauna == nil then
+					return
+				end
+
+				behavior.onAttackTelegraphEnd(currentFauna.model)
+			end)
+		end
+		return
+	end
+
 	SurvivalService.applyDamage(player, definition.damage, rollStatusEffects(definition))
 end
 
 local function processFauna(fauna: FaunaInstance)
 	local behavior = FaunaRegistry.get(fauna.speciesId)
 	if behavior == nil then
+		return
+	end
+
+	if fauna.model:GetAttribute("UsesEmbeddedAi") == true then
 		return
 	end
 
@@ -285,7 +330,7 @@ local function processFauna(fauna: FaunaInstance)
 	end
 
 	if nearestDistance <= definition.meleeRangeStuds then
-		tryAttackPlayer(fauna, nearestPlayer, definition)
+		tryAttackPlayer(fauna, nearestPlayer, behavior)
 		return
 	end
 
@@ -326,11 +371,26 @@ local function spawnFauna(speciesId: string, position: Vector3): FaunaInstance?
 		model.Parent = workspace
 	end
 
-	local humanoid = FaunaModelUtils.setupMotor(model, behavior.definition.moveSpeedStuds)
-	if humanoid == nil then
-		model:Destroy()
-		Logger.warn("AnimalService", `Failed to setup motor for {faunaId}`)
-		return nil
+	local humanoid: Humanoid
+	if model:GetAttribute("UsesEmbeddedAi") == true then
+		local stub = Instance.new("Humanoid")
+		stub.Name = "FaunaHumanoid"
+		stub.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+		stub.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
+		stub.BreakJointsOnDeath = false
+		stub.WalkSpeed = behavior.definition.moveSpeedStuds
+		stub.MaxHealth = 100
+		stub.Health = 100
+		stub.Parent = model
+		humanoid = stub
+	else
+		local h = FaunaModelUtils.setupMotor(model, behavior.definition.moveSpeedStuds)
+		if h == nil then
+			model:Destroy()
+			Logger.warn("AnimalService", `Failed to setup motor for {faunaId}`)
+			return nil
+		end
+		humanoid = h
 	end
 
 	local instance: FaunaInstance = {
@@ -348,6 +408,10 @@ local function spawnFauna(speciesId: string, position: Vector3): FaunaInstance?
 		revealed = not behavior.definition.ambush,
 		lastAttacker = nil,
 	}
+
+	if behavior.onAttackTelegraphEnd ~= nil then
+		behavior.onAttackTelegraphEnd(instance.model)
+	end
 
 	faunaInstances[faunaId] = instance
 	broadcastSnapshot(instance)

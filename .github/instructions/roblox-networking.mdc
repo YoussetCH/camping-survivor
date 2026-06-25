@@ -1,0 +1,45 @@
+---
+applyTo: '**'
+description: RemoteEvent standards
+alwaysApply: true
+---
+
+Networking Rules:
+
+Use RemoteEvents by default.
+
+Use RemoteFunctions only when synchronous response is required.
+
+All remotes must live under:
+
+ReplicatedStorage.Remotes
+
+Structure:
+
+Remotes
+    Events
+    Functions
+
+Naming:
+
+AttackEvent
+PurchaseItemEvent
+EquipWeaponEvent
+
+Never:
+
+DoStuff
+Action
+Test
+
+Pattern:
+
+Client
+    ->
+RemoteEvent
+    ->
+Controller
+    ->
+Service
+
+Never execute game logic directly from a remote.

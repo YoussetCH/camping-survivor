@@ -1,0 +1,40 @@
+---
+applyTo: '**'
+description: Localization (i18n) standards — EN default, ES launch
+alwaysApply: true
+---
+
+# Localization
+
+Camping Survivor is **multilingual**. GDD §1.11 · spec `openspec/specs/localization/spec.md`.
+
+## Languages
+
+| Code | Language | Role |
+|------|----------|------|
+| `en` | English | **Default** and fallback |
+| `es` | Spanish | Launch language |
+
+Extensible: add `Locales/{code}.luau` + registry entry only.
+
+## Rules
+
+- **Never** hardcode player-visible strings in Controllers or UI modules
+- Use `Localization.get(key)` / `Localization.format(key, params)` on the client
+- Store preference in `PlayerProfile.settings.locale` (server authoritative)
+- Network payloads use **IDs** (items, quests); client resolves display text
+- Server validates locale against whitelist on change requests
+- GDD is written in Spanish for design; **in-game copy lives in locale files**
+
+## Flow
+
+```
+Settings UI → LocalizationController → Remote → LocalizationService
+  → Repository (settings.locale) → LocaleChanged → controllers refresh UI
+```
+
+## New copy checklist
+
+1. Add key to `Locales/en.luau`
+2. Add translation to `Locales/es.luau`
+3. Reference key from controller/UI — not literal text

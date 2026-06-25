@@ -1,0 +1,28 @@
+---
+applyTo: '**'
+description: Persistence standards
+alwaysApply: true
+---
+
+Use ProfileStore.
+
+Never save on every change.
+
+Use:
+
+- Session cache
+- Autosave
+- PlayerRemoving
+- BindToClose
+
+Persist only through services.
+
+Controllers must never access datastore.
+
+Create repositories for persistence.
+
+Example:
+
+PlayerDataRepository
+InventoryRepository
+QuestRepository

@@ -1,0 +1,32 @@
+---
+applyTo: '**'
+description: UI standards
+alwaysApply: true
+---
+
+UI must be passive.
+
+UI only:
+
+- Displays data
+- Sends user intent
+
+UI never:
+
+- Saves data
+- Calculates rewards
+- Modifies inventory
+
+Flow:
+
+UI
+ ->
+Controller
+ ->
+Remote
+ ->
+Service
+
+Use reusable UI components.
+
+Avoid duplicated UI logic.
