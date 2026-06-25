@@ -59,6 +59,12 @@
 - [x] 8.4 Update `docs/Implementation-Plan.md` active slice entry
 - [ ] 8.5 Archive with `openspec archive slice-07-fauna` (after user approval)
 
-## Verification
+## 9. Dodge mechanic (player skill — speed-based)
 
-- [ ] Run `verify.md` — all items checked
+- [x] 9.1 Add `DODGE_COOLDOWN_SECONDS`, `DODGE_IFRAME_SECONDS`, `DODGE_MOVE_STUDS`, `DODGE_BLEED_FAIL_CHANCE`, `DODGE_POISON_FAIL_CHANCE`, `DODGE_MIN_WALKSPEED` to `FaunaConstants`
+- [x] 9.2 Register `DodgeEvent` (Client→Server) and `DodgeResultEvent` (Server→Client) in `Remotes.luau` + Rojo `.model.json` files
+- [x] 9.3 Extend `AnimalService` with dodge-state tracking (`playerDodgeStates`), `isPlayerDodging`, `computeDodgeSuccessChance`; gate fauna→player damage on dodge check
+- [x] 9.4 Increase wolf `attackWindupSeconds` (0.25→0.65) so players have a fair reaction window
+- [x] 9.5 Add `DodgeButton` (Q / mobile) and `performDodge` to `FaunaController`; listen `DodgeResultEvent` for toast feedback
+- [x] 9.6 Add `combat.dodge.*` and `ui.combat.dodge` keys in `en` / `es`
+- [x] 9.7 Add wolf stun feedback visuals (model tint + dizzy stars) while stunned after player hit

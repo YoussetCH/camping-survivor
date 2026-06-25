@@ -22,12 +22,22 @@ local function onAttackTelegraphEnd(model: Model)
 	model:SetAttribute(FaunaConstants.WOLF_ATTACK_DURATION_ATTRIBUTE, nil)
 end
 
+local function onStunStart(model: Model)
+	WolfModel.setStunnedVisual(model, true)
+end
+
+local function onStunEnd(model: Model)
+	WolfModel.setStunnedVisual(model, false)
+end
+
 FaunaRegistry.register({
 	speciesId = WolfDefinition.speciesId,
 	definition = WolfDefinition,
 	buildModel = WolfModel.build,
 	onAttackTelegraphStart = onAttackTelegraphStart,
 	onAttackTelegraphEnd = onAttackTelegraphEnd,
+	onStunStart = onStunStart,
+	onStunEnd = onStunEnd,
 })
 
 return {}

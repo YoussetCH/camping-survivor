@@ -1,6 +1,6 @@
 ## MODIFIED Requirements
 
-### Requirement: Item use intent
+### Requirement: Item use (v0.1)
 
 The client SHALL fire `UseItemEvent` with bag slot key only. The server SHALL validate ownership and apply item effects authoritatively.
 

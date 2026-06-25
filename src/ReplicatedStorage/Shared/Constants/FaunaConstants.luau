@@ -20,6 +20,16 @@ export type FaunaConstantsModule = {
 	FAUNA_SYNC_RADIUS_STUDS: number,
 	PATROL_RADIUS_STUDS: number,
 	ESCAPE_RADIUS_STUDS: number,
+	-- Dodge
+	DODGE_COOLDOWN_SECONDS: number,
+	DODGE_IFRAME_SECONDS: number,
+	DODGE_MOVE_STUDS: number,
+	DODGE_BLEED_FAIL_CHANCE: number,
+	DODGE_POISON_FAIL_CHANCE: number,
+	DODGE_MIN_WALKSPEED: number,
+	-- Stun & approach warning
+	PLAYER_HIT_STUN_SECONDS: number,
+	FAUNA_MELEE_APPROACH_WARNING_SECONDS: number,
 }
 
 local FaunaConstants: FaunaConstantsModule = {
@@ -42,6 +52,16 @@ local FaunaConstants: FaunaConstantsModule = {
 	FAUNA_SYNC_RADIUS_STUDS = 120,
 	PATROL_RADIUS_STUDS = 24,
 	ESCAPE_RADIUS_STUDS = 55,
+	-- Dodge system
+	DODGE_COOLDOWN_SECONDS = 3,
+	DODGE_IFRAME_SECONDS = 0.55,
+	DODGE_MOVE_STUDS = 6,
+	DODGE_BLEED_FAIL_CHANCE = 0.55,
+	DODGE_POISON_FAIL_CHANCE = 0.3,
+	DODGE_MIN_WALKSPEED = 8,
+	-- Stun & approach warning
+	PLAYER_HIT_STUN_SECONDS = 2.2,              -- seconds wolf is stunned after being hit
+	FAUNA_MELEE_APPROACH_WARNING_SECONDS = 1.2, -- grace window before first attack when wolf enters melee range
 }
 
 return FaunaConstants

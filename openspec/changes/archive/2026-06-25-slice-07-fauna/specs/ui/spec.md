@@ -42,3 +42,15 @@ The client SHALL fire `AttackFaunaEvent` with `faunaId` only when the player ini
 - GIVEN the player has a tool equipped and clicks a fauna model
 - WHEN attack input is triggered within UI range
 - THEN the client fires `AttackFaunaEvent` with the model's `FaunaId` attribute
+
+### Requirement: Wolf stun visual feedback
+
+When a wolf enters `stunned` state due to a valid player hit, clients SHALL see clear visual feedback on the wolf model (tint and dizzy stars) for the stun duration.
+
+#### Scenario: Wolf shows dizzy feedback while stunned
+
+- GIVEN a player lands a valid hit on a wolf
+- WHEN the server applies stun time
+- THEN the wolf model shows stun feedback (`Highlight` + stars billboard)
+- AND the visual clears automatically when stun ends
+

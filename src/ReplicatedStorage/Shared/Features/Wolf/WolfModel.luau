@@ -7,6 +7,7 @@ local WOLF_DARK = Color3.fromRGB(45, 45, 52)
 local WOLF_NOSE = Color3.fromRGB(30, 30, 35)
 local WOLF_EYE = Color3.fromRGB(200, 50, 45)
 local WOLF_GROWL_SOUND_ID = "rbxassetid://139412217660571"
+local STUN_HIGHLIGHT_NAME = "StunnedHighlight"
 
 -- Head motor: local offset from root to head pivot
 local HEAD_OFFSET = CFrame.new(0, 0.5, -2.75)
@@ -130,6 +131,34 @@ local function playGrowlSound(model: Model)
 	end
 end
 
+local function setStunnedVisual(model: Model, enabled: boolean)
+	local root = model.PrimaryPart
+	if root == nil then
+		return
+	end
+
+	local existingHighlight = model:FindFirstChild(STUN_HIGHLIGHT_NAME)
+
+	if not enabled then
+		if existingHighlight ~= nil then
+			existingHighlight:Destroy()
+		end
+		return
+	end
+
+	if existingHighlight == nil then
+		local highlight = Instance.new("Highlight")
+		highlight.Name = STUN_HIGHLIGHT_NAME
+		highlight.Adornee = model
+		highlight.FillTransparency = 0.65
+		highlight.FillColor = Color3.fromRGB(120, 180, 255)
+		highlight.OutlineColor = Color3.fromRGB(255, 245, 120)
+		highlight.DepthMode = Enum.HighlightDepthMode.Occluded
+		highlight.Parent = model
+	end
+
+end
+
 local function build(groundPosition: Vector3): Model
 	local model = Instance.new("Model")
 	model.Name = "Wolf"
@@ -179,4 +208,5 @@ end
 return {
 	build = build,
 	playGrowlSound = playGrowlSound,
+	setStunnedVisual = setStunnedVisual,
 }

@@ -30,6 +30,8 @@ local Remotes = {
 		"WorldUpdatedEvent",
 		"AttackFaunaEvent",
 		"FaunaUpdatedEvent",
+		"DodgeEvent",
+		"DodgeResultEvent",
 	},
 	Functions = {},
 }

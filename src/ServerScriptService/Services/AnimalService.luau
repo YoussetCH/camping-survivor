@@ -21,6 +21,10 @@ local FaunaTypes = require(ReplicatedStorage.Shared.Types.Fauna)
 
 local AnimalService = BaseService.new("AnimalService")
 
+-- { [userId]: { dodging: boolean, dodgeEndAt: number, lastDodgeAt: number } }
+type DodgeState = { dodging: boolean, dodgeEndAt: number, lastDodgeAt: number }
+local playerDodgeStates: { [number]: DodgeState } = {}
+
 type FaunaInstance = {
 	faunaId: string,
 	speciesId: string,
@@ -35,6 +39,11 @@ type FaunaInstance = {
 	patrolTarget: Vector3?,
 	revealed: boolean,
 	lastAttacker: Player?,
+	-- Stun & approach warning
+	stunnedUntil: number,           -- os.clock() time when stun expires
+	approachWarningUntil: number,   -- grace window after first melee entry; wolf waits before attacking
+	wasInMeleeRange: boolean,       -- tracks melee range entry to trigger approach warning once per engagement
+	stunVisualActive: boolean,
 }
 
 local faunaInstances: { [string]: FaunaInstance } = {}
@@ -233,9 +242,66 @@ local function moveFaunaToward(fauna: FaunaInstance, targetPosition: Vector3, sp
 	fauna.humanoid:MoveTo(Vector3.new(targetPosition.X, root.Position.Y, targetPosition.Z))
 end
 
+local function isPlayerDodging(player: Player): boolean
+	local state = playerDodgeStates[player.UserId]
+	if state == nil or not state.dodging then
+		return false
+	end
+
+	if os.clock() > state.dodgeEndAt then
+		state.dodging = false
+		return false
+	end
+
+	return true
+end
+
+local function computeDodgeSuccessChance(player: Player): number
+	local data = PlayerDataService:GetData(player)
+	if data == nil then
+		return 1
+	end
+
+	-- Check character walkspeed as a proxy for being slow (debuffs, encumbrance)
+	local character = player.Character
+	local humanoid = if character ~= nil then character:FindFirstChildOfClass("Humanoid") else nil
+	if humanoid ~= nil and humanoid.WalkSpeed < FaunaConstants.DODGE_MIN_WALKSPEED then
+		return 0
+	end
+
+	-- Status effects reduce dodge chance
+	local statusEffects = data.survival.statusEffects or {}
+	local hasBleeding = false
+	local hasPoison = false
+
+	for _, effect in statusEffects do
+		if effect == "bleeding" then
+			hasBleeding = true
+		elseif effect == "poison" then
+			hasPoison = true
+		end
+	end
+
+	local failChance = 0
+	if hasBleeding then
+		failChance = math.max(failChance, FaunaConstants.DODGE_BLEED_FAIL_CHANCE)
+	end
+	if hasPoison then
+		failChance = math.max(failChance, FaunaConstants.DODGE_POISON_FAIL_CHANCE)
+	end
+
+	return 1 - failChance
+end
+
 local function tryAttackPlayer(fauna: FaunaInstance, player: Player, behavior: FaunaTypes.FaunaBehaviorModule)
 	local definition = behavior.definition
 	local now = os.clock()
+
+	-- Skip if stunned or during the approach-warning grace window
+	if now < fauna.stunnedUntil or now < fauna.approachWarningUntil then
+		return
+	end
+
 	if now - fauna.lastAttackAt < definition.attackCooldownSeconds then
 		return
 	end
@@ -266,6 +332,14 @@ local function tryAttackPlayer(fauna: FaunaInstance, player: Player, behavior: F
 				return
 			end
 
+			-- Player landed a hit during the telegraph window — cancel damage
+			if os.clock() < currentFauna.stunnedUntil then
+				if behavior.onAttackTelegraphEnd ~= nil then
+					behavior.onAttackTelegraphEnd(currentFauna.model)
+				end
+				return
+			end
+
 			local delayedFaunaRoot = getFaunaRoot(currentFauna)
 			local delayedPlayerRoot = getCharacterRoot(player)
 			if delayedFaunaRoot == nil or delayedPlayerRoot == nil then
@@ -274,6 +348,23 @@ local function tryAttackPlayer(fauna: FaunaInstance, player: Player, behavior: F
 
 			if (delayedFaunaRoot.Position - delayedPlayerRoot.Position).Magnitude > definition.meleeRangeStuds + 1 then
 				return
+			end
+
+			-- Check if player successfully dodged
+			if isPlayerDodging(player) then
+				local successChance = computeDodgeSuccessChance(player)
+				if math.random() <= successChance then
+					-- Dodge success: mark iframe used, notify client
+					local dodgeState = playerDodgeStates[player.UserId]
+					if dodgeState ~= nil then
+						dodgeState.dodging = false
+					end
+					Networking.getEvent("DodgeResultEvent"):FireClient(player, { success = true })
+					return
+				else
+					-- Dodge failed (too slow) — still take damage
+					Networking.getEvent("DodgeResultEvent"):FireClient(player, { failed = true })
+				end
 			end
 
 			SurvivalService.applyDamage(player, definition.damage, rollStatusEffects(definition))
@@ -306,11 +397,43 @@ local function processFauna(fauna: FaunaInstance)
 	end
 
 	local definition = behavior.definition
+	local now = os.clock()
+
+	-- Stunned: retreat away from last known player position
+	if now < fauna.stunnedUntil then
+		if not fauna.stunVisualActive and behavior.onStunStart ~= nil then
+			behavior.onStunStart(fauna.model)
+		end
+		fauna.stunVisualActive = true
+		fauna.state = "stunned"
+		local faunaRoot = getFaunaRoot(fauna)
+		if fauna.targetPlayer ~= nil and faunaRoot ~= nil then
+			local playerRoot = getCharacterRoot(fauna.targetPlayer)
+			if playerRoot ~= nil then
+				local awayDir = (faunaRoot.Position - playerRoot.Position)
+				if awayDir.Magnitude > 0.1 then
+					awayDir = awayDir.Unit
+				end
+				local retreatTarget = faunaRoot.Position + awayDir * 10
+				moveFaunaToward(fauna, retreatTarget, definition.moveSpeedStuds * 0.5)
+			end
+		end
+		return
+	end
+
+	if fauna.stunVisualActive then
+		if behavior.onStunEnd ~= nil then
+			behavior.onStunEnd(fauna.model)
+		end
+		fauna.stunVisualActive = false
+	end
+
 	local nearestPlayer, nearestDistance = findNearestPlayer(fauna, getEffectiveDetectRange(definition))
 
 	if nearestPlayer == nil then
 		fauna.state = "patrol"
 		fauna.targetPlayer = nil
+		fauna.wasInMeleeRange = false
 		ensurePatrolTarget(fauna)
 
 		if fauna.patrolTarget ~= nil then
@@ -331,6 +454,7 @@ local function processFauna(fauna: FaunaInstance)
 	end
 
 	if not canSpeciesAggress(definition) then
+		fauna.wasInMeleeRange = false
 		ensurePatrolTarget(fauna)
 		if fauna.patrolTarget ~= nil then
 			moveFaunaToward(fauna, fauna.patrolTarget, definition.moveSpeedStuds * 0.35)
@@ -338,7 +462,15 @@ local function processFauna(fauna: FaunaInstance)
 		return
 	end
 
-	if nearestDistance <= definition.meleeRangeStuds then
+	local inMeleeRange = nearestDistance <= definition.meleeRangeStuds
+
+	-- Detect melee range entry: give player a reaction window before first attack
+	if inMeleeRange and not fauna.wasInMeleeRange then
+		fauna.approachWarningUntil = now + FaunaConstants.FAUNA_MELEE_APPROACH_WARNING_SECONDS
+	end
+	fauna.wasInMeleeRange = inMeleeRange
+
+	if inMeleeRange then
 		tryAttackPlayer(fauna, nearestPlayer, behavior)
 		return
 	end
@@ -416,10 +548,17 @@ local function spawnFauna(speciesId: string, position: Vector3): FaunaInstance?
 		patrolTarget = nil,
 		revealed = not behavior.definition.ambush,
 		lastAttacker = nil,
+		stunnedUntil = 0,
+		approachWarningUntil = 0,
+		wasInMeleeRange = false,
+		stunVisualActive = false,
 	}
 
 	if behavior.onAttackTelegraphEnd ~= nil then
 		behavior.onAttackTelegraphEnd(instance.model)
+	end
+	if behavior.onStunEnd ~= nil then
+		behavior.onStunEnd(instance.model)
 	end
 
 	faunaInstances[faunaId] = instance
@@ -481,6 +620,7 @@ local function onAttackFauna(player: Player, faunaId: unknown)
 	end
 
 	local equippedTool = playerData.equipped.toolItemId
+	local behavior = FaunaRegistry.get(fauna.speciesId)
 
 	if not ResourceNodesConstants.matchesAxeTool(equippedTool) then
 		return
@@ -489,6 +629,15 @@ local function onAttackFauna(player: Player, faunaId: unknown)
 	playerAttackCooldowns[player.UserId] = now
 	fauna.hp -= FaunaConstants.PLAYER_ATTACK_DAMAGE
 	fauna.lastAttacker = player
+
+	-- Stun the wolf: it retreats and cannot attack for PLAYER_HIT_STUN_SECONDS
+	fauna.stunnedUntil = now + FaunaConstants.PLAYER_HIT_STUN_SECONDS
+	fauna.wasInMeleeRange = false -- reset so re-entry triggers a new approach warning
+	fauna.state = "stunned"
+	if behavior ~= nil and behavior.onStunStart ~= nil and not fauna.stunVisualActive then
+		behavior.onStunStart(fauna.model)
+		fauna.stunVisualActive = true
+	end
 	broadcastSnapshot(fauna)
 
 	if fauna.hp <= 0 then
@@ -499,6 +648,28 @@ end
 function AnimalService:Init()
 	local trove = self:GetTrove()
 	trove:Connect(Networking.getEvent("AttackFaunaEvent").OnServerEvent, onAttackFauna)
+
+	trove:Connect(Networking.getEvent("DodgeEvent").OnServerEvent, function(player: Player)
+		local now = os.clock()
+		local state = playerDodgeStates[player.UserId]
+
+		if state ~= nil and now - state.lastDodgeAt < FaunaConstants.DODGE_COOLDOWN_SECONDS then
+			-- Still on cooldown — notify client
+			Networking.getEvent("DodgeResultEvent"):FireClient(player, { cooldown = true })
+			return
+		end
+
+		playerDodgeStates[player.UserId] = {
+			dodging = true,
+			dodgeEndAt = now + FaunaConstants.DODGE_IFRAME_SECONDS,
+			lastDodgeAt = now,
+		}
+	end)
+
+	trove:Connect(Players.PlayerRemoving, function(player: Player)
+		playerDodgeStates[player.UserId] = nil
+		playerAttackCooldowns[player.UserId] = nil
+	end)
 end
 
 function AnimalService:Start()

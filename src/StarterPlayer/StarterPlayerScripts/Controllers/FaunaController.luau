@@ -21,16 +21,20 @@ local ToolSwingAnimation = require(ReplicatedStorage.Shared.Tools.ToolSwingAnima
 local FaunaController = BaseController.new("FaunaController")
 
 local ATTACK_ACTION_NAME = "AttackFauna"
+local DODGE_ACTION_NAME = "DodgeFauna"
 local ATTACK_KEY = Enum.KeyCode.F
+local DODGE_KEY = Enum.KeyCode.Q
 local FRONT_ATTACK_DOT_THRESHOLD = 0.25
 
 local healthBars: { [string]: BillboardGui } = {}
 local walkStates: { [Model]: { lastPosition: Vector3, walkPhase: number } } = {}
 local toastLabel: TextLabel? = nil
 local attackButton: TextButton? = nil
+local dodgeButton: TextButton? = nil
 local toastToken = 0
 local holdAttackActive = false
 local holdAttackToken = 0
+local dodgeCooldown = false
 
 local function findFaunaModel(faunaId: string): Model?
 	for _, descendant in workspace:GetDescendants() do
@@ -335,6 +339,64 @@ local function refreshAttackButtonLabel()
 	end
 end
 
+local function refreshDodgeButtonLabel()
+	if dodgeButton ~= nil then
+		dodgeButton.Text = Localization.get("ui.combat.dodge")
+	end
+end
+
+local function performClientDash()
+	local player = Players.LocalPlayer
+	local character = player.Character
+	if character == nil then
+		return
+	end
+
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if rootPart == nil or not rootPart:IsA("BasePart") or humanoid == nil then
+		return
+	end
+
+	-- Dash sideways (right) relative to character facing
+	local rightVector = rootPart.CFrame.RightVector
+	local dashTarget = rootPart.Position + rightVector * FaunaConstants.DODGE_MOVE_STUDS
+
+	-- Briefly boost walkspeed for snappy feel, then restore
+	local originalSpeed = humanoid.WalkSpeed
+	humanoid.WalkSpeed = originalSpeed * 3.5
+	humanoid:MoveTo(dashTarget)
+
+	task.delay(0.18, function()
+		if humanoid.Parent ~= nil then
+			humanoid.WalkSpeed = originalSpeed
+		end
+	end)
+end
+
+local function performDodge()
+	if dodgeCooldown then
+		showToast("combat.dodge.cooldown")
+		return
+	end
+
+	dodgeCooldown = true
+	performClientDash()
+	Networking.getEvent("DodgeEvent"):FireServer()
+
+	-- Visual cooldown indicator on button
+	if dodgeButton ~= nil then
+		dodgeButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+	end
+
+	task.delay(FaunaConstants.DODGE_COOLDOWN_SECONDS, function()
+		dodgeCooldown = false
+		if dodgeButton ~= nil then
+			dodgeButton.BackgroundColor3 = Color3.fromRGB(55, 120, 180)
+		end
+	end)
+end
+
 function FaunaController:Init()
 	local trove = self:GetTrove()
 	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
@@ -381,6 +443,32 @@ function FaunaController:Init()
 	attackCorner.CornerRadius = UDim.new(1, 0)
 	attackCorner.Parent = attackButton
 
+	-- Dodge button (positioned to the left of attack button)
+	dodgeButton = Instance.new("TextButton")
+	dodgeButton.Name = "DodgeButton"
+	dodgeButton.AnchorPoint = Vector2.new(1, 1)
+	dodgeButton.Position = UDim2.new(1, -100, 1, -88)
+	dodgeButton.Size = if UserInputService.TouchEnabled then UDim2.fromOffset(72, 72) else UDim2.fromOffset(64, 64)
+	dodgeButton.BackgroundColor3 = Color3.fromRGB(55, 120, 180)
+	dodgeButton.BorderSizePixel = 0
+	dodgeButton.Font = Enum.Font.GothamBold
+	dodgeButton.TextSize = if UserInputService.TouchEnabled then 14 else 13
+	dodgeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	dodgeButton.Text = Localization.get("ui.combat.dodge")
+	dodgeButton.Parent = screenGui
+
+	local dodgeCorner = Instance.new("UICorner")
+	dodgeCorner.CornerRadius = UDim.new(1, 0)
+	dodgeCorner.Parent = dodgeButton
+
+	trove:Connect(dodgeButton.MouseButton1Down, function()
+		performDodge()
+	end)
+
+	trove:Connect(dodgeButton.TouchTap, function()
+		performDodge()
+	end)
+
 	trove:Connect(attackButton.MouseButton1Down, function()
 		startHeldAttack()
 	end)
@@ -416,13 +504,42 @@ function FaunaController:Init()
 		ATTACK_KEY
 	)
 
+	ContextActionService:BindAction(
+		DODGE_ACTION_NAME,
+		function(_actionName, inputState)
+			if UserInputService:GetFocusedTextBox() ~= nil then
+				return Enum.ContextActionResult.Pass
+			end
+
+			if inputState == Enum.UserInputState.Begin then
+				performDodge()
+				return Enum.ContextActionResult.Sink
+			end
+
+			return Enum.ContextActionResult.Pass
+		end,
+		false,
+		DODGE_KEY
+	)
+
 	trove:Add(function()
 		ContextActionService:UnbindAction(ATTACK_ACTION_NAME)
+		ContextActionService:UnbindAction(DODGE_ACTION_NAME)
 		stopHeldAttack()
 	end)
 
 	trove:Connect(Networking.getEvent("FaunaUpdatedEvent").OnClientEvent, function(snapshot: FaunaTypes.FaunaSnapshot)
 		updateHealthBar(snapshot)
+	end)
+
+	trove:Connect(Networking.getEvent("DodgeResultEvent").OnClientEvent, function(result: { success: boolean?, failed: boolean?, cooldown: boolean? })
+		if result.cooldown then
+			showToast("combat.dodge.cooldown")
+		elseif result.success then
+			showToast("combat.dodge.success")
+		elseif result.failed then
+			showToast("combat.dodge.failed")
+		end
 	end)
 
 	trove:Connect(UserInputService.InputBegan, function(input, gameProcessed)
@@ -442,6 +559,7 @@ function FaunaController:Init()
 	end)
 
 	trove:Connect(Localization.LocaleChanged, refreshAttackButtonLabel)
+	trove:Connect(Localization.LocaleChanged, refreshDodgeButtonLabel)
 end
 
 function FaunaController:Start()

@@ -139,6 +139,10 @@ local es: LocaleTypes.LocaleTable = {
 	["combat.hint.snake"] = "Equipa el hacha y haz clic en la serpiente dos veces (15 HP).",
 	["combat.hint.mobile"] = "Toca la fauna o pulsa Atacar. En PC: tecla F.",
 	["ui.combat.attack"] = "Atacar",
+	["ui.combat.dodge"] = "Esquivar",
+	["combat.dodge.success"] = "¡Esquivado!",
+	["combat.dodge.failed"] = "Muy lento — ¡golpeado!",
+	["combat.dodge.cooldown"] = "Esquiva no disponible.",
 }
 
 return es

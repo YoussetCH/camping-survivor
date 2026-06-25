@@ -139,6 +139,10 @@ local en: LocaleTypes.LocaleTable = {
 	["combat.hint.snake"] = "Equip axe, click the snake twice (15 HP).",
 	["combat.hint.mobile"] = "Tap fauna or press Attack. Desktop: F key.",
 	["ui.combat.attack"] = "Attack",
+	["ui.combat.dodge"] = "Dodge",
+	["combat.dodge.success"] = "Dodged!",
+	["combat.dodge.failed"] = "Too slow — hit!",
+	["combat.dodge.cooldown"] = "Dodge not ready.",
 }
 
 return en

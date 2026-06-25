@@ -1,6 +1,6 @@
 --!strict
 
-export type FaunaAiState = "idle" | "patrol" | "alert" | "chase" | "attack" | "flee"
+export type FaunaAiState = "idle" | "patrol" | "alert" | "chase" | "attack" | "flee" | "stunned"
 
 export type FaunaDropDefinition = {
 	itemId: string,
@@ -46,6 +46,8 @@ export type FaunaBehaviorModule = {
 	onReveal: ((model: Model) -> ())?,
 	onAttackTelegraphStart: ((model: Model, definition: FaunaSpeciesDefinition) -> ())?,
 	onAttackTelegraphEnd: ((model: Model) -> ())?,
+	onStunStart: ((model: Model) -> ())?,
+	onStunEnd: ((model: Model) -> ())?,
 }
 
 return {}

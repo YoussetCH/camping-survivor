@@ -10,8 +10,8 @@ local WolfDefinition: FaunaTypes.FaunaSpeciesDefinition = {
 	detectRangeNightStuds = 52,
 	meleeRangeStuds = 12,
 	attackCooldownSeconds = 2,
-	attackWindupSeconds = 0.25,
-	attackAnimationSeconds = 0.45,
+	attackWindupSeconds = 0.65,
+	attackAnimationSeconds = 0.9,
 	moveSpeedStuds = 14,
 	statusOnHit = {
 		{ id = "bleeding", chance = 0.6 },
