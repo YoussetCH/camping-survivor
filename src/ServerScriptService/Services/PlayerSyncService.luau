@@ -38,10 +38,34 @@ local function buildCampSnapshot(data: PlayerProfileTypes.PlayerProfile): CampTy
 	return data.camp
 end
 
-local function buildQuestSnapshot(data: PlayerProfileTypes.PlayerProfile): QuestTypes.QuestSnapshot
+local function getActiveQuestIds(data: PlayerProfileTypes.PlayerProfile): { string }
+	local activeIds: { string } = {}
+
+	for questId, state in data.quests do
+		if state.status == "active" then
+			table.insert(activeIds, questId)
+		end
+	end
+
+	table.sort(activeIds)
+	return activeIds
+end
+
+local function buildQuestSnapshot(
+	data: PlayerProfileTypes.PlayerProfile,
+	trackedQuestId: string?,
+	lastCompletedQuestId: string?
+): QuestTypes.QuestSnapshot
 	return {
 		progress = data.quests,
 		tutorialCompleted = data.tutorialCompleted,
+		trackedQuestId = trackedQuestId,
+		activeQuestIds = getActiveQuestIds(data),
+		stats = {
+			level = data.stats.level,
+			xp = data.stats.xp,
+		},
+		lastCompletedQuestId = lastCompletedQuestId,
 	}
 end
 
@@ -67,12 +91,24 @@ function PlayerSyncService.syncCampToClient(player: Player, data: PlayerProfileT
 	Networking.getEvent("CampUpdatedEvent"):FireClient(player, buildCampSnapshot(data))
 end
 
+function PlayerSyncService.syncQuestToClient(
+	player: Player,
+	data: PlayerProfileTypes.PlayerProfile,
+	trackedQuestId: string?,
+	lastCompletedQuestId: string?
+)
+	Networking.getEvent("QuestProgressEvent"):FireClient(
+		player,
+		buildQuestSnapshot(data, trackedQuestId, lastCompletedQuestId)
+	)
+end
+
 function PlayerSyncService.syncToClient(player: Player, data: PlayerProfileTypes.PlayerProfile)
 	PlayerSyncService.syncSurvivalToClient(player, data)
 	PlayerSyncService.syncInventoryToClient(player, data)
 	PlayerSyncService.syncRecipesToClient(player, data)
 	PlayerSyncService.syncCampToClient(player, data)
-	Networking.getEvent("QuestProgressEvent"):FireClient(player, buildQuestSnapshot(data))
+	PlayerSyncService.syncQuestToClient(player, data, nil, nil)
 	Logger.debug("PlayerSyncService", `Synced domain state to {player.Name}`)
 end
 

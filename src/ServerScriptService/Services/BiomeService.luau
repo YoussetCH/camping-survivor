@@ -1,11 +1,13 @@
 --!strict
 
 local CollectionService = game:GetService("CollectionService")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local BaseService = require(ServerScriptService.Kernel.BaseService)
 local DayNightService = require(ServerScriptService.Services.DayNightService)
+local GameEvents = require(ServerScriptService.Features.GameEvents)
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local WorldConstants = require(ReplicatedStorage.Shared.Constants.WorldConstants)
 
@@ -18,6 +20,8 @@ type BiomeZoneEntry = {
 }
 
 local biomeZones: { BiomeZoneEntry } = {}
+local playerBiomeIds: { [number]: string } = {}
+local biomeTickThread: thread? = nil
 
 local function getPartVolume(part: BasePart): number
 	local size = part.Size
@@ -101,6 +105,30 @@ function BiomeService:Init()
 end
 
 function BiomeService:Start()
+	local function scheduleBiomeTick()
+		for _, player in Players:GetPlayers() do
+			local biomeId = BiomeService.getBiomeIdForPlayer(player)
+			local previousBiomeId = playerBiomeIds[player.UserId]
+
+			if previousBiomeId ~= biomeId then
+				playerBiomeIds[player.UserId] = biomeId
+				GameEvents.fireBiomeEntered(player, biomeId)
+			end
+		end
+
+		biomeTickThread = task.delay(2, scheduleBiomeTick)
+	end
+
+	scheduleBiomeTick()
+end
+
+function BiomeService:Destroy()
+	if biomeTickThread ~= nil then
+		task.cancel(biomeTickThread)
+		biomeTickThread = nil
+	end
+
+	BaseService.Destroy(self)
 end
 
 return BiomeService

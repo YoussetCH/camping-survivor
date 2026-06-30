@@ -32,6 +32,8 @@ local Remotes = {
 		"FaunaUpdatedEvent",
 		"DodgeEvent",
 		"DodgeResultEvent",
+		"QuestTrackEvent",
+		"QuestUiOpenedEvent",
 	},
 	Functions = {},
 }

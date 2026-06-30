@@ -143,6 +143,60 @@ local es: LocaleTypes.LocaleTable = {
 	["combat.dodge.success"] = "¡Esquivado!",
 	["combat.dodge.failed"] = "Muy lento — ¡golpeado!",
 	["combat.dodge.cooldown"] = "Esquiva no disponible.",
+
+	["quest.journal.title"] = "Diario de misiones",
+	["quest.journal.active"] = "Activas",
+	["quest.journal.completed"] = "Completadas",
+	["quest.journal.track"] = "Seguir",
+	["quest.journal.empty_active"] = "No hay misiones activas.",
+	["quest.journal.empty_completed"] = "Aún no hay misiones completadas.",
+	["quest.tracker.collapse"] = "Misiones",
+	["quest.completed_toast"] = "Misión completada: {title}",
+	["quest.level_up"] = "¡Subiste de nivel! Ahora eres nivel {level}.",
+
+	["quest.t01_spawn.title"] = "Bienvenido, superviviente",
+	["quest.t01_spawn.objective.1"] = "Revisa tus estadísticas vitales",
+
+	["quest.t02_gather.title"] = "Primeros suministros",
+	["quest.t02_gather.objective.1"] = "Recolecta palos ({current}/{target})",
+	["quest.t02_gather.objective.2"] = "Recolecta piedras ({current}/{target})",
+
+	["quest.t03_sparks.title"] = "Haz chispas",
+	["quest.t03_sparks.objective.1"] = "Craftea chispas ({current}/{target})",
+
+	["quest.t04_tinder.title"] = "Yesca seca",
+	["quest.t04_tinder.objective.1"] = "Craftea yesca ({current}/{target})",
+
+	["quest.t05_campfire.title"] = "Enciende el fuego",
+	["quest.t05_campfire.objective.1"] = "Craftea el plano de fogata",
+	["quest.t05_campfire.objective.2"] = "Coloca una fogata en tu parcela",
+
+	["quest.t06_cold.title"] = "Vence al frío",
+	["quest.t06_cold.objective.1"] = "Mantente caliente junto al fuego ({current}/{target}s)",
+
+	["quest.t07_bandage.title"] = "Curación básica",
+	["quest.t07_bandage.objective.1"] = "Craftea vendajes ({current}/{target})",
+
+	["quest.t08_complete.title"] = "Monta el campamento",
+	["quest.t08_complete.objective.1"] = "Coloca una mesa de craft en tu parcela",
+
+	["quest.m00_wood.title"] = "Reservas",
+	["quest.m00_wood.objective.1"] = "Recolecta madera ({current}/{target})",
+
+	["quest.main_01_chest.title"] = "Un hogar seguro",
+	["quest.main_01_chest.objective.1"] = "Coloca un cofre de almacenamiento",
+
+	["quest.side_01_berries.title"] = "Banquete de bayas",
+	["quest.side_01_berries.objective.1"] = "Recolecta bayas ({current}/{target})",
+
+	["quest.side_02_wolf.title"] = "Caza del lobo",
+	["quest.side_02_wolf.objective.1"] = "Derrota lobos ({current}/{target})",
+
+	["quest.tutorial.hint.t02_gather"] = "Recolecta palos y piedras de los nodos cercanos.",
+	["quest.tutorial.hint.t03_sparks"] = "Pulsa C para craftear chispas con pedernal y palo.",
+	["quest.tutorial.hint.t05_campfire"] = "Craftea la fogata y pulsa B para construir.",
+	["quest.tutorial.hint.t06_cold"] = "Quédate cerca de la fogata hasta completar el temporizador.",
+	["quest.tutorial.hint.t08_complete"] = "Coloca el plano de mesa de craft en tu parcela.",
 }
 
 return es

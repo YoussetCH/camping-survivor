@@ -114,6 +114,26 @@ function ClientSyncController:Init()
 				unlocked = profileData.recipes.unlocked,
 			}
 		end
+
+		latestQuest = {
+			progress = if type(profileData.quests) == "table" then profileData.quests else {},
+			tutorialCompleted = profileData.tutorialCompleted == true,
+			trackedQuestId = nil,
+			activeQuestIds = {},
+			stats = {
+				level = if type(profileData.stats) == "table" then profileData.stats.level else 1,
+				xp = if type(profileData.stats) == "table" then profileData.stats.xp else 0,
+			},
+			lastCompletedQuestId = nil,
+		}
+
+		for questId, state in latestQuest.progress do
+			if type(state) == "table" and state.status == "active" then
+				table.insert(latestQuest.activeQuestIds, questId)
+			end
+		end
+
+		table.sort(latestQuest.activeQuestIds)
 	end)
 end
 

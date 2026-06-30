@@ -7,7 +7,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local BaseService = require(ServerScriptService.Kernel.BaseService)
+local CampService = require(ServerScriptService.Services.CampService)
 local DayNightService = require(ServerScriptService.Services.DayNightService)
+local GameEvents = require(ServerScriptService.Features.GameEvents)
 local FaunaConstants = require(ReplicatedStorage.Shared.Constants.FaunaConstants)
 local FaunaRegistry = require(ServerScriptService.Features.FaunaRegistry)
 local InventoryService = require(ServerScriptService.Services.InventoryService)
@@ -160,6 +162,7 @@ local function destroyFauna(faunaId: string, killer: Player?)
 	local behavior = FaunaRegistry.get(fauna.speciesId)
 	if killer ~= nil and behavior ~= nil then
 		grantDrops(killer, behavior.definition)
+		GameEvents.fireFaunaDefeated(killer, fauna.speciesId)
 	end
 
 	broadcastSnapshot(fauna, true)
@@ -459,6 +462,21 @@ local function processFauna(fauna: FaunaInstance)
 		if fauna.patrolTarget ~= nil then
 			moveFaunaToward(fauna, fauna.patrolTarget, definition.moveSpeedStuds * 0.35)
 		end
+		return
+	end
+
+	local QuestService = require(ServerScriptService.Services.QuestService)
+
+	if nearestPlayer ~= nil and QuestService.isPlayerInTutorialSafeZone(nearestPlayer) then
+		fauna.state = "patrol"
+		fauna.targetPlayer = nil
+		fauna.wasInMeleeRange = false
+		ensurePatrolTarget(fauna)
+
+		if fauna.patrolTarget ~= nil then
+			moveFaunaToward(fauna, fauna.patrolTarget, definition.moveSpeedStuds * 0.35)
+		end
+
 		return
 	end
 

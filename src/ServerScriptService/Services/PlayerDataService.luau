@@ -48,6 +48,16 @@ local function normalizeSettings(data: PlayerProfileTypes.PlayerProfile)
 	end
 end
 
+local function normalizeStats(data: PlayerProfileTypes.PlayerProfile)
+	if type(data.stats.missionsCompleted) ~= "table" then
+		data.stats.missionsCompleted = {}
+	end
+
+	if type(data.quests) ~= "table" then
+		data.quests = {}
+	end
+end
+
 local function onClientReady(player: Player)
 	if repository == nil then
 		return
@@ -80,6 +90,7 @@ local function onPlayerAdded(player: Player)
 	if data ~= nil then
 		normalizeSettings(data)
 		normalizeInventory(data)
+		normalizeStats(data)
 
 		local CraftingService = require(ServerScriptService.Services.CraftingService)
 		CraftingService.ensureTutorialRecipesUnlocked(player, data)

@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local BaseService = require(ServerScriptService.Kernel.BaseService)
+local GameEvents = require(ServerScriptService.Features.GameEvents)
 local InventoryService = require(ServerScriptService.Services.InventoryService)
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local Networking = require(ReplicatedStorage.Shared.Networking.Networking)
@@ -283,6 +284,10 @@ local function handleHarvest(player: Player, nodeId: string)
 		reasonKey = "resource.success.harvest",
 		granted = rolledOutputs,
 	})
+
+	for _, output in rolledOutputs do
+		GameEvents.fireItemHarvested(player, output.itemId, output.quantity)
+	end
 
 	Logger.info("ResourceService", `{player.Name} harvested {nodeId}`)
 end

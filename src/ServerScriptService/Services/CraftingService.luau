@@ -6,6 +6,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local BaseService = require(ServerScriptService.Kernel.BaseService)
 local CraftingConstants = require(ReplicatedStorage.Shared.Constants.CraftingConstants)
+local GameEvents = require(ServerScriptService.Features.GameEvents)
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local Networking = require(ReplicatedStorage.Shared.Networking.Networking)
 local Recipes = require(ReplicatedStorage.Shared.Constants.Recipes)
@@ -200,6 +201,11 @@ local function craftItem(player: Player, recipeId: unknown)
 		recipeId = recipeId,
 		reasonKey = nil,
 	})
+
+	for _, output in recipe.outputs do
+		GameEvents.fireItemCrafted(player, recipeId, output.itemId, output.quantity)
+	end
+
 	PlayerDataService:SaveProfile(player)
 	Logger.debug("CraftingService", `{player.Name} crafted {recipeId}`)
 end

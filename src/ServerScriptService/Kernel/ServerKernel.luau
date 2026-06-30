@@ -73,6 +73,7 @@ local INIT_ORDER = {
 	"BiomeService",
 	"ResourceService",
 	"AnimalService",
+	"QuestService",
 }
 
 local function getInitPriority(serviceName: string): number

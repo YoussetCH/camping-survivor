@@ -143,6 +143,60 @@ local en: LocaleTypes.LocaleTable = {
 	["combat.dodge.success"] = "Dodged!",
 	["combat.dodge.failed"] = "Too slow — hit!",
 	["combat.dodge.cooldown"] = "Dodge not ready.",
+
+	["quest.journal.title"] = "Quest Journal",
+	["quest.journal.active"] = "Active",
+	["quest.journal.completed"] = "Completed",
+	["quest.journal.track"] = "Track",
+	["quest.journal.empty_active"] = "No active quests.",
+	["quest.journal.empty_completed"] = "No completed quests yet.",
+	["quest.tracker.collapse"] = "Quests",
+	["quest.completed_toast"] = "Quest complete: {title}",
+	["quest.level_up"] = "Level up! You are now level {level}.",
+
+	["quest.t01_spawn.title"] = "Welcome, Survivor",
+	["quest.t01_spawn.objective.1"] = "Check your vital stats",
+
+	["quest.t02_gather.title"] = "First Supplies",
+	["quest.t02_gather.objective.1"] = "Gather sticks ({current}/{target})",
+	["quest.t02_gather.objective.2"] = "Gather stones ({current}/{target})",
+
+	["quest.t03_sparks.title"] = "Make Sparks",
+	["quest.t03_sparks.objective.1"] = "Craft sparks ({current}/{target})",
+
+	["quest.t04_tinder.title"] = "Dry Tinder",
+	["quest.t04_tinder.objective.1"] = "Craft tinder ({current}/{target})",
+
+	["quest.t05_campfire.title"] = "Light the Fire",
+	["quest.t05_campfire.objective.1"] = "Craft a campfire blueprint",
+	["quest.t05_campfire.objective.2"] = "Place a campfire on your plot",
+
+	["quest.t06_cold.title"] = "Beat the Cold",
+	["quest.t06_cold.objective.1"] = "Stay warm by the fire ({current}/{target}s)",
+
+	["quest.t07_bandage.title"] = "Basic Healing",
+	["quest.t07_bandage.objective.1"] = "Craft bandages ({current}/{target})",
+
+	["quest.t08_complete.title"] = "Set Up Camp",
+	["quest.t08_complete.objective.1"] = "Place a craft table on your plot",
+
+	["quest.m00_wood.title"] = "Stock Up",
+	["quest.m00_wood.objective.1"] = "Gather wood ({current}/{target})",
+
+	["quest.main_01_chest.title"] = "A Safe Home",
+	["quest.main_01_chest.objective.1"] = "Place a storage chest",
+
+	["quest.side_01_berries.title"] = "Berry Feast",
+	["quest.side_01_berries.objective.1"] = "Gather berries ({current}/{target})",
+
+	["quest.side_02_wolf.title"] = "Wolf Hunt",
+	["quest.side_02_wolf.objective.1"] = "Defeat wolves ({current}/{target})",
+
+	["quest.tutorial.hint.t02_gather"] = "Gather sticks and stones from nearby nodes.",
+	["quest.tutorial.hint.t03_sparks"] = "Press C to craft sparks with flint and a stick.",
+	["quest.tutorial.hint.t05_campfire"] = "Craft a campfire blueprint, then press B to build.",
+	["quest.tutorial.hint.t06_cold"] = "Stay close to your campfire until the timer fills.",
+	["quest.tutorial.hint.t08_complete"] = "Place the craft table blueprint on your plot.",
 }
 
 return en

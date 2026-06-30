@@ -1,15 +1,6 @@
-# Quests — Technical Spec
+# Quests — Delta Spec (slice-08)
 
-**Status:** Stub (slice-08)  
-**GDD:** Cap. 8  
-**Service:** QuestService
-
-## Purpose
-
-Tutorial chain, main/side/daily missions, XP and Brasas rewards.
-## Requirements
-
-_To be defined in slice-08-quests._
+## ADDED Requirements
 
 ### Requirement: Quest definitions registry
 
@@ -113,4 +104,3 @@ All quest titles, objective descriptions, tracker labels, and completion toasts 
 - GIVEN the quest tracker displays an active quest in English
 - WHEN the player switches locale to Spanish
 - THEN tracker text updates to Spanish keys without rejoining
-

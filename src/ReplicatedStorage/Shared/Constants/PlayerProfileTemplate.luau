@@ -13,6 +13,7 @@ export type PlayerProfileTemplate = {
 		xp: number,
 		playTime: number,
 		deaths: number,
+		missionsCompleted: { string },
 	},
 	quests: {},
 	settings: {
@@ -54,6 +55,7 @@ local PlayerProfileTemplate: PlayerProfileTemplate = {
 		xp = 0,
 		playTime = 0,
 		deaths = 0,
+		missionsCompleted = {},
 	},
 	quests = {},
 	settings = {

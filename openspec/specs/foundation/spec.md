@@ -7,12 +7,10 @@
 ## Purpose
 
 Shared types, profile schema, remote registry, item/recipe constants, and initial client sync on join.
-
 ## Requirements
-
 ### Requirement: Extended player profile schema
 
-The system SHALL persist an extended `PlayerProfile` including survival stats, status effects, camp data (plot id, level, structures array, per-chest storage maps), unlocked recipes, monetization purchase tracking, tutorial completion, extended stats (playTime, deaths), hotbar (6 entries), and equipped tool/coat ids.
+The system SHALL persist an extended `PlayerProfile` including survival stats, status effects, camp data (plot id, level, structures array, per-chest storage maps), unlocked recipes, monetization purchase tracking, tutorial completion, extended stats (playTime, deaths, **missionsCompleted**), hotbar (6 entries), equipped tool/coat ids, and **typed quest progress** map `quests: { [questId]: QuestState }`.
 
 #### Scenario: New player defaults
 
@@ -29,6 +27,8 @@ The system SHALL persist an extended `PlayerProfile` including survival stats, s
 - AND `settings.locale` is `"en"`
 - AND hotbar has 6 empty entries
 - AND equipped.toolItemId and equipped.coatItemId are nil
+- AND `quests` is an empty map
+- AND `stats.missionsCompleted` is an empty array
 
 ### Requirement: Player locale preference (GDD v1.2)
 
@@ -105,6 +105,26 @@ The system SHALL provide a server-side `GameEvents` module exposing typed signal
 - GIVEN camp level transitions from 0 to 1 after placing starter structures
 - WHEN level recalculation completes
 - THEN `GameEvents.CampLevelChanged` fires with newLevel 1 and oldLevel 0
+
+### Requirement: QuestTrackEvent in remote registry
+
+The system SHALL register `QuestTrackEvent` under `ReplicatedStorage.Remotes.Events` alongside existing domain sync events.
+
+#### Scenario: QuestTrackEvent exists at server start
+
+- GIVEN the server has finished `NetworkingService:Init`
+- WHEN `QuestTrackEvent` is queried
+- THEN a RemoteEvent instance exists with that name
+
+### Requirement: Extended quest sync payload
+
+`QuestProgressEvent` SHALL carry an extended `QuestSnapshot` including: `progress` (full quests map), `tutorialCompleted`, `trackedQuestId`, `activeQuestIds`, `stats.level`, and `stats.xp` sufficient for HUD tracker and journal without extra remotes.
+
+#### Scenario: Initial sync includes quest state
+
+- GIVEN a player profile loaded successfully
+- WHEN initial sync runs
+- THEN `QuestProgressEvent` fires with current quest progress, level, xp, and tracked quest id (if any)
 
 ## Related
 

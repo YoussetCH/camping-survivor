@@ -296,6 +296,12 @@ function SurvivalService.clearStatusEffects(player: Player)
 end
 
 function SurvivalService.applyDamage(player: Player, amount: number, statusEffectIds: { string }?)
+	local QuestService = require(ServerScriptService.Services.QuestService)
+
+	if QuestService.isTutorialActive(player) then
+		return
+	end
+
 	local data = PlayerDataService:GetData(player)
 	if data == nil then
 		return

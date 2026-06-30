@@ -634,6 +634,8 @@ local function placeStructure(player: Player, request: unknown)
 		reasonKey = "camp.success.placed",
 		structureId = structureId,
 	})
+
+	GameEvents.fireStructurePlaced(player, blueprintId)
 end
 
 local function demolishStructure(player: Player, structureId: unknown)
