@@ -80,6 +80,7 @@ local function buildObjectiveProgress(definition: Quests.QuestDefinition): { Que
 			blueprintId = objective.blueprintId,
 			speciesId = objective.speciesId,
 			panelId = objective.panelId,
+			helperTypeId = objective.helperTypeId,
 		})
 	end
 
@@ -115,9 +116,13 @@ local function applyRetroactiveObjective(
 	elseif objective.kind == "place_structure" and objective.blueprintId ~= nil then
 		local placed = 0
 
-		for _, structure in data.camp.structures do
-			if structure.blueprintId == objective.blueprintId then
-				placed += 1
+		if type(data.camp.structures) == "table" then
+			for _, structure in data.camp.structures do
+				if structure.blueprintId == objective.blueprintId then
+					if structure.hp == nil or structure.hp > 0 then
+						placed += 1
+					end
+				end
 			end
 		end
 
@@ -234,6 +239,11 @@ local function completeQuest(player: Player, data: PlayerProfileTypes.PlayerProf
 	state.completedAt = os.time()
 	markMissionCompleted(data, questId)
 	grantRewards(player, data, definition)
+
+	if questId == "main_05_lumberjack" then
+		local HelperService = require(ServerScriptService.Services.HelperService)
+		HelperService.recruit(player, "lumberjack")
+	end
 
 	if definition.setsTutorialCompleted == true then
 		data.tutorialCompleted = true
@@ -366,6 +376,7 @@ function QuestService.startQuest(player: Player, questId: string): boolean
 
 	if data.quests[questId] ~= nil and data.quests[questId].status == "active" then
 		syncQuest(player, data, nil)
+		GameEvents.fireQuestStarted(player, questId)
 	end
 
 	return true
@@ -407,7 +418,273 @@ function QuestService.isPlayerInTutorialSafeZone(player: Player): boolean
 	return (root.Position - plotPart.Position).Magnitude <= QuestConstants.TUTORIAL_SAFE_RADIUS_STUDS
 end
 
-local function onPlayerReady(player: Player)
+local MAIN_QUEST_CHAIN = {
+	"m00_wood",
+	"main_01_chest",
+	"main_05_lumberjack",
+}
+
+local TUTORIAL_QUEST_IDS = {
+	"t01_spawn",
+	"t02_gather",
+	"t03_sparks",
+	"t04_tinder",
+	"t05_campfire",
+	"t06_cold",
+	"t07_bandage",
+	"t08_complete",
+}
+
+local function countBlueprintPlaced(data: PlayerProfileTypes.PlayerProfile, blueprintId: string): number
+	local count = 0
+
+	if type(data.camp.structures) ~= "table" then
+		return 0
+	end
+
+	for _, structure in data.camp.structures do
+		if structure.blueprintId == blueprintId then
+			count += 1
+		end
+	end
+
+	return count
+end
+
+local function countChestsOnPlot(data: PlayerProfileTypes.PlayerProfile): number
+	local count = countBlueprintPlaced(data, "bp_chest")
+
+	if count == 0 and type(data.camp.chests) == "table" then
+		for _ in data.camp.chests do
+			count += 1
+		end
+	end
+
+	return count
+end
+
+local function hasChestOnPlot(data: PlayerProfileTypes.PlayerProfile): boolean
+	return countChestsOnPlot(data) >= 1
+end
+
+local function countActiveQuestsAny(data: PlayerProfileTypes.PlayerProfile): number
+	local count = 0
+
+	for _, state in data.quests do
+		if state.status == "active" then
+			count += 1
+		end
+	end
+
+	return count
+end
+
+local function isLegacyPostTutorialCamp(data: PlayerProfileTypes.PlayerProfile): boolean
+	local hasCampfire = countBlueprintPlaced(data, "bp_campfire") >= 1
+	local hasChest = hasChestOnPlot(data)
+	local hasCraftTable = countBlueprintPlaced(data, "bp_craft_table") >= 1
+
+	if hasCraftTable then
+		return true
+	end
+
+	if hasCampfire and hasChest then
+		return true
+	end
+
+	return data.camp.level >= 1 and hasChest
+end
+
+local function forceCompleteQuestRecord(data: PlayerProfileTypes.PlayerProfile, questId: string)
+	local definition = Quests.get(questId)
+
+	if definition == nil or isQuestRecordCompleted(data, questId) then
+		return
+	end
+
+	local objectives = buildObjectiveProgress(definition)
+
+	for _, objective in objectives do
+		objective.current = objective.target
+	end
+
+	data.quests[questId] = {
+		status = "completed",
+		objectives = objectives,
+		startedAt = os.time(),
+		completedAt = os.time(),
+	}
+	markMissionCompleted(data, questId)
+end
+
+local function reconcileLegacyMainProgress(player: Player, data: PlayerProfileTypes.PlayerProfile)
+	if not data.tutorialCompleted or not hasChestOnPlot(data) then
+		return
+	end
+
+	if not isQuestRecordCompleted(data, "m00_wood") then
+		forceCompleteQuestRecord(data, "m00_wood")
+	end
+
+	if isQuestRecordCompleted(data, "main_01_chest") then
+		return
+	end
+
+	local main01State = data.quests.main_01_chest
+
+	if main01State == nil or main01State.status ~= "active" then
+		if QuestService.canStartQuest(data, "main_01_chest") then
+			QuestService.startQuest(player, "main_01_chest")
+		end
+	end
+
+	main01State = data.quests.main_01_chest
+
+	if main01State ~= nil and main01State.status == "active" then
+		applyRetroactiveProgress(data, main01State)
+		checkQuestCompletion(player, data, "main_01_chest")
+	end
+end
+
+local function tryProgressMainQuestChain(player: Player, data: PlayerProfileTypes.PlayerProfile)
+	if not data.tutorialCompleted then
+		return
+	end
+
+	for _, questId in MAIN_QUEST_CHAIN do
+		if isQuestRecordCompleted(data, questId) then
+			continue
+		end
+
+		local state = data.quests[questId]
+
+		if state ~= nil and state.status == "active" then
+			applyRetroactiveProgress(data, state)
+			checkQuestCompletion(player, data, questId)
+
+			if data.quests[questId] ~= nil and data.quests[questId].status == "active" then
+				return
+			end
+
+			continue
+		end
+
+		if QuestService.canStartQuest(data, questId) then
+			QuestService.startQuest(player, questId)
+			return
+		end
+
+		return
+	end
+end
+
+local function bootstrapLegacyTutorialCompletion(data: PlayerProfileTypes.PlayerProfile)
+	if data.tutorialCompleted or not isLegacyPostTutorialCamp(data) then
+		return
+	end
+
+	data.tutorialCompleted = true
+
+	for _, questId in TUTORIAL_QUEST_IDS do
+		forceCompleteQuestRecord(data, questId)
+	end
+
+	Logger.info("QuestService", "Bootstrapped tutorial completion for legacy camp progress")
+end
+
+local function repairQuestObjectiveProgress(data: PlayerProfileTypes.PlayerProfile)
+	for questId, state in data.quests do
+		if state.status ~= "active" then
+			continue
+		end
+
+		local definition = Quests.get(questId)
+
+		if definition == nil then
+			continue
+		end
+
+		if type(state.objectives) ~= "table" or #state.objectives ~= #definition.objectives then
+			state.objectives = buildObjectiveProgress(definition)
+		end
+	end
+end
+
+local function reconcileActiveQuestRecords(player: Player, data: PlayerProfileTypes.PlayerProfile)
+	for questId, state in data.quests do
+		if state.status ~= "active" then
+			continue
+		end
+
+		applyRetroactiveProgress(data, state)
+		checkQuestCompletion(player, data, questId)
+	end
+end
+
+local function repairTutorialQuestChain(player: Player, data: PlayerProfileTypes.PlayerProfile)
+	for _, questId in TUTORIAL_QUEST_IDS do
+		if isQuestRecordCompleted(data, questId) then
+			continue
+		end
+
+		local definition = Quests.get(questId)
+
+		if definition == nil then
+			continue
+		end
+
+		if definition.prerequisites ~= nil then
+			for _, prerequisiteId in definition.prerequisites do
+				if not isQuestRecordCompleted(data, prerequisiteId) then
+					forceCompleteQuestRecord(data, prerequisiteId)
+				end
+			end
+		end
+
+		if QuestService.canStartQuest(data, questId) then
+			QuestService.startQuest(player, questId)
+			return
+		end
+
+		forceCompleteQuestRecord(data, questId)
+	end
+
+	if isQuestRecordCompleted(data, "t08_complete") then
+		data.tutorialCompleted = true
+	end
+end
+
+local function ensureAtLeastOneActiveQuest(player: Player, data: PlayerProfileTypes.PlayerProfile)
+	if countActiveQuestsAny(data) > 0 then
+		return
+	end
+
+	if not data.tutorialCompleted then
+		repairTutorialQuestChain(player, data)
+	else
+		reconcileLegacyMainProgress(player, data)
+		tryProgressMainQuestChain(player, data)
+	end
+
+	if countActiveQuestsAny(data) > 0 then
+		return
+	end
+
+	if data.tutorialCompleted then
+		for _, questId in MAIN_QUEST_CHAIN do
+			if QuestService.canStartQuest(data, questId) then
+				QuestService.startQuest(player, questId)
+				return
+			end
+		end
+	end
+
+	if countActiveQuestsAny(data) == 0 then
+		Logger.warn("QuestService", `No active quest after reconcile for {player.Name}`)
+	end
+end
+
+local function reconcilePlayerQuests(player: Player)
 	local data = PlayerDataService:GetData(player)
 
 	if data == nil then
@@ -421,6 +698,18 @@ local function onPlayerReady(player: Player)
 	if type(data.quests) ~= "table" then
 		data.quests = {}
 	end
+
+	if type(data.camp.structures) ~= "table" then
+		data.camp.structures = {}
+	end
+
+	if type(data.camp.chests) ~= "table" then
+		data.camp.chests = {}
+	end
+
+	repairQuestObjectiveProgress(data)
+	bootstrapLegacyTutorialCompletion(data)
+	reconcileActiveQuestRecords(player, data)
 
 	local session = getSession(player)
 
@@ -444,11 +733,12 @@ local function onPlayerReady(player: Player)
 			end
 		end
 
-		if not hasActiveTutorial then
-			QuestService.startQuest(player, "t01_spawn")
+		if not hasActiveTutorial and not QuestService.startQuest(player, "t01_spawn") then
+			repairTutorialQuestChain(player, data)
 		end
-	elseif QuestService.canStartQuest(data, "m00_wood") then
-		QuestService.startQuest(player, "m00_wood")
+	else
+		reconcileLegacyMainProgress(player, data)
+		tryProgressMainQuestChain(player, data)
 	end
 
 	if data.tutorialCompleted and data.stats.level >= 2 then
@@ -461,8 +751,22 @@ local function onPlayerReady(player: Player)
 		end
 	end
 
+	ensureAtLeastOneActiveQuest(player, data)
+
 	session.trackedQuestId = session.trackedQuestId or getDefaultTrackedQuestId(data)
 	syncQuest(player, data, nil)
+end
+
+function QuestService.reconcileForPlayer(player: Player)
+	reconcilePlayerQuests(player)
+end
+
+local function onPlayerReady(player: Player)
+	reconcilePlayerQuests(player)
+end
+
+local function onClientReady(player: Player)
+	reconcilePlayerQuests(player)
 end
 
 local function isNearCampfire(player: Player, data: PlayerProfileTypes.PlayerProfile): boolean
@@ -594,6 +898,18 @@ local function onCampPlotAssigned(player: Player, _plotId: string)
 	end, 1)
 end
 
+local function onEscortToPlot(player: Player, helperTypeId: string)
+	local data = PlayerDataService:GetData(player)
+
+	if data == nil then
+		return
+	end
+
+	incrementMatchingObjectives(player, data, function(objective)
+		return objective.kind == "escort_to_plot" and objective.helperTypeId == helperTypeId
+	end, 1)
+end
+
 local function onQuestTrack(player: Player, questId: unknown)
 	if type(questId) ~= "string" then
 		return
@@ -632,8 +948,10 @@ function QuestService:Init()
 	trove:Connect(GameEvents.FaunaDefeated.Event, onFaunaDefeated)
 	trove:Connect(GameEvents.QuestUiOpened.Event, onQuestUiOpened)
 	trove:Connect(GameEvents.CampPlotAssigned.Event, onCampPlotAssigned)
+	trove:Connect(GameEvents.EscortToPlot.Event, onEscortToPlot)
 	trove:Connect(Networking.getEvent("QuestTrackEvent").OnServerEvent, onQuestTrack)
 	trove:Connect(Networking.getEvent("QuestUiOpenedEvent").OnServerEvent, onQuestUiOpenedRemote)
+	trove:Connect(Networking.getEvent("ClientReadyEvent").OnServerEvent, onClientReady)
 end
 
 function QuestService:Start()

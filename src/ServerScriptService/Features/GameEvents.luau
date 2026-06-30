@@ -10,6 +10,8 @@ export type GameEventsModule = {
 	FaunaDefeated: BindableEvent,
 	BiomeEntered: BindableEvent,
 	QuestUiOpened: BindableEvent,
+	QuestStarted: BindableEvent,
+	EscortToPlot: BindableEvent,
 	fireCampPlotAssigned: (player: Player, plotId: string) -> (),
 	fireCampLevelChanged: (player: Player, newLevel: number, oldLevel: number) -> (),
 	fireRequestPlotTeleport: (player: Player, plotId: string) -> (),
@@ -19,6 +21,8 @@ export type GameEventsModule = {
 	fireFaunaDefeated: (player: Player, speciesId: string) -> (),
 	fireBiomeEntered: (player: Player, biomeId: string) -> (),
 	fireQuestUiOpened: (player: Player, panelId: string) -> (),
+	fireQuestStarted: (player: Player, questId: string) -> (),
+	fireEscortToPlot: (player: Player, helperTypeId: string) -> (),
 }
 
 local campPlotAssigned = Instance.new("BindableEvent")
@@ -30,6 +34,8 @@ local structurePlaced = Instance.new("BindableEvent")
 local faunaDefeated = Instance.new("BindableEvent")
 local biomeEntered = Instance.new("BindableEvent")
 local questUiOpened = Instance.new("BindableEvent")
+local questStarted = Instance.new("BindableEvent")
+local escortToPlot = Instance.new("BindableEvent")
 
 local GameEvents: GameEventsModule = {
 	CampPlotAssigned = campPlotAssigned,
@@ -41,6 +47,8 @@ local GameEvents: GameEventsModule = {
 	FaunaDefeated = faunaDefeated,
 	BiomeEntered = biomeEntered,
 	QuestUiOpened = questUiOpened,
+	QuestStarted = questStarted,
+	EscortToPlot = escortToPlot,
 	fireCampPlotAssigned = function(player: Player, plotId: string)
 		campPlotAssigned:Fire(player, plotId)
 	end,
@@ -67,6 +75,12 @@ local GameEvents: GameEventsModule = {
 	end,
 	fireQuestUiOpened = function(player: Player, panelId: string)
 		questUiOpened:Fire(player, panelId)
+	end,
+	fireQuestStarted = function(player: Player, questId: string)
+		questStarted:Fire(player, questId)
+	end,
+	fireEscortToPlot = function(player: Player, helperTypeId: string)
+		escortToPlot:Fire(player, helperTypeId)
 	end,
 }
 

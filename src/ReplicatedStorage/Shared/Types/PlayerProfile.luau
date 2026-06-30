@@ -1,6 +1,7 @@
 --!strict
 
 local CampTypes = require(script.Parent.Camp)
+local HelperTypes = require(script.Parent.Helper)
 local InventoryTypes = require(script.Parent.Inventory)
 local PlayerSettingsTypes = require(script.Parent.PlayerSettings)
 local QuestTypes = require(script.Parent.Quest)
@@ -33,6 +34,8 @@ export type PlayerProfile = {
 	survival: SurvivalTypes.SurvivalStats,
 	statusEffects: { SurvivalTypes.StatusEffect },
 	camp: CampTypes.CampData,
+	helpers: HelperTypes.HelperProgress,
+	lostHelpers: { string },
 	recipes: { unlocked: { string } },
 	clanId: string?,
 	monetization: { purchases: { [string]: unknown } },

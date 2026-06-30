@@ -9,8 +9,12 @@ local UserInputService = game:GetService("UserInputService")
 local BaseController = require(script.Parent.Parent.Kernel.BaseController)
 local ClientKernel = require(script.Parent.Parent.Kernel.ClientKernel)
 local FaunaConstants = require(ReplicatedStorage.Shared.Constants.FaunaConstants)
+local HelperConstants = require(ReplicatedStorage.Shared.Constants.HelperConstants)
 local Networking = require(ReplicatedStorage.Shared.Networking.Networking)
 local FaunaWalkAnimation = require(ReplicatedStorage.Shared.World.FaunaWalkAnimation)
+local HelperEscortAnimation = require(ReplicatedStorage.Shared.World.HelperEscortAnimation)
+local HelperR6WalkAnimation = require(ReplicatedStorage.Shared.World.HelperR6WalkAnimation)
+local HelperWalkAnimation = require(ReplicatedStorage.Shared.World.HelperWalkAnimation)
 local SnakeAnimation = require(ReplicatedStorage.Shared.World.SnakeAnimation)
 local WolfAttackAnimation = require(ReplicatedStorage.Shared.World.WolfAttackAnimation)
 local FaunaTypes = require(ReplicatedStorage.Shared.Types.Fauna)
@@ -579,6 +583,8 @@ function FaunaController:Start()
 
 			if model.Parent == nil then
 				walkStates[model] = nil
+				HelperEscortAnimation.clear(model)
+				HelperR6WalkAnimation.clear(model)
 				continue
 			end
 
@@ -594,8 +600,45 @@ function FaunaController:Start()
 			local moved = (root.Position - state.lastPosition).Magnitude
 			local isMoving = moved > 0.05
 			local speciesId = model:GetAttribute(FaunaConstants.FAUNA_SPECIES_ATTRIBUTE)
+			local humanoid = model:FindFirstChildOfClass("Humanoid")
 
-			if speciesId == "snake" and SnakeAnimation.isSnakeCapable(model) then
+			local function updateHelperWalkAnimation(isWalking: boolean)
+				if HelperR6WalkAnimation.isCapable(model) then
+					HelperEscortAnimation.clear(model)
+					state.walkPhase = HelperR6WalkAnimation.advancePhase(state.walkPhase, deltaTime, isWalking)
+					HelperR6WalkAnimation.update(model, state.walkPhase, isWalking)
+					return
+				end
+
+				if HelperEscortAnimation.isCapable(model) and humanoid ~= nil then
+					local walkSpeed = if isWalking and humanoid.WalkSpeed > 0
+						then humanoid.WalkSpeed
+						elseif isWalking then HelperConstants.PLOT_WALK_SPEED
+						else 0
+					HelperEscortAnimation.update(model, isWalking, walkSpeed)
+				end
+			end
+
+			if model:GetAttribute("PlotHelper") == true then
+				local patrolMoving = model:GetAttribute("HelperPatrolMoving") == true
+				local humanoidMoving = humanoid ~= nil and humanoid.MoveDirection.Magnitude > 0.05
+				local isWalking = patrolMoving or humanoidMoving or isMoving
+				updateHelperWalkAnimation(isWalking)
+
+				state.lastPosition = root.Position
+				continue
+			end
+
+			if HelperR6WalkAnimation.isCapable(model) then
+				updateHelperWalkAnimation(isMoving)
+
+				state.lastPosition = root.Position
+				continue
+			end
+
+			if HelperEscortAnimation.isCapable(model) and humanoid ~= nil then
+				HelperEscortAnimation.update(model, isMoving, humanoid.WalkSpeed)
+			elseif speciesId == "snake" and SnakeAnimation.isSnakeCapable(model) then
 				local attackAlpha = 0
 				local attackStartedAt = model:GetAttribute(FaunaConstants.SNAKE_ATTACK_STARTED_AT_ATTRIBUTE)
 				local attackDuration = model:GetAttribute(FaunaConstants.SNAKE_ATTACK_DURATION_ATTRIBUTE)
@@ -621,6 +664,9 @@ function FaunaController:Start()
 				else
 					FaunaWalkAnimation.update(model, state.walkPhase, isMoving)
 				end
+			elseif HelperWalkAnimation.isWalkCapable(model) then
+				state.walkPhase = HelperWalkAnimation.advancePhase(state.walkPhase, deltaTime, isMoving)
+				HelperWalkAnimation.update(model, state.walkPhase, isMoving)
 			else
 				state.walkPhase = FaunaWalkAnimation.advancePhase(state.walkPhase, deltaTime, isMoving)
 				FaunaWalkAnimation.update(model, state.walkPhase, isMoving)

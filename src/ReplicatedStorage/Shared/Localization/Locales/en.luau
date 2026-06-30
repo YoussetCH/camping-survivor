@@ -186,6 +186,28 @@ local en: LocaleTypes.LocaleTable = {
 	["quest.main_01_chest.title"] = "A Safe Home",
 	["quest.main_01_chest.objective.1"] = "Place a storage chest",
 
+	["quest.main_05_lumberjack.title"] = "The Lumberjack",
+	["quest.main_05_lumberjack.objective.1"] = "Escort the lumberjack to your plot",
+
+	["helper.lumberjack.name"] = "Lumberjack",
+	["helper.cook.name"] = "Cook",
+	["helper.herbalist.name"] = "Herbalist",
+	["helper.guardian.name"] = "Guardian",
+	["helper.miner.name"] = "Miner",
+	["helper.fisher.name"] = "Fisher",
+	["helper.panel.title"] = "Helpers",
+	["helper.panel.empty"] = "No helpers recruited yet.",
+	["helper.stat.hunger"] = "Food",
+	["helper.stat.health"] = "HP",
+	["helper.action.feed"] = "Feed",
+	["helper.action.cure"] = "Cure",
+	["helper.mode.work"] = "Work",
+	["helper.mode.shelter"] = "Shelter",
+	["helper.death_toast"] = "A helper has died.",
+	["helper.hunger_warning"] = "Hungry",
+	["helper.feed.missing_food"] = "No food in your bag.",
+	["helper.cure.missing_medicine"] = "No bandage or antidote in your bag.",
+
 	["quest.side_01_berries.title"] = "Berry Feast",
 	["quest.side_01_berries.objective.1"] = "Gather berries ({current}/{target})",
 

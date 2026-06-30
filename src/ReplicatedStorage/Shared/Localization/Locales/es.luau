@@ -186,6 +186,28 @@ local es: LocaleTypes.LocaleTable = {
 	["quest.main_01_chest.title"] = "Un hogar seguro",
 	["quest.main_01_chest.objective.1"] = "Coloca un cofre de almacenamiento",
 
+	["quest.main_05_lumberjack.title"] = "El leñador",
+	["quest.main_05_lumberjack.objective.1"] = "Escolta al leñador hasta tu parcela",
+
+	["helper.lumberjack.name"] = "Leñador",
+	["helper.cook.name"] = "Cocinero",
+	["helper.herbalist.name"] = "Herbalista",
+	["helper.guardian.name"] = "Guardián",
+	["helper.miner.name"] = "Minero",
+	["helper.fisher.name"] = "Pescador",
+	["helper.panel.title"] = "Ayudantes",
+	["helper.panel.empty"] = "Aún no tienes ayudantes.",
+	["helper.stat.hunger"] = "Comida",
+	["helper.stat.health"] = "Vida",
+	["helper.action.feed"] = "Alimentar",
+	["helper.action.cure"] = "Curar",
+	["helper.mode.work"] = "Trabajar",
+	["helper.mode.shelter"] = "Refugio",
+	["helper.death_toast"] = "Un ayudante ha muerto.",
+	["helper.hunger_warning"] = "Hambriento",
+	["helper.feed.missing_food"] = "No tienes comida en la mochila.",
+	["helper.cure.missing_medicine"] = "No tienes vendaje ni antídoto.",
+
 	["quest.side_01_berries.title"] = "Banquete de bayas",
 	["quest.side_01_berries.objective.1"] = "Recolecta bayas ({current}/{target})",
 

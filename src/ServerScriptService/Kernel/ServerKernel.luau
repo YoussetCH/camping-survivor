@@ -74,6 +74,7 @@ local INIT_ORDER = {
 	"ResourceService",
 	"AnimalService",
 	"QuestService",
+	"HelperService",
 }
 
 local function getInitPriority(serviceName: string): number
@@ -120,7 +121,20 @@ function ServerKernel.startServices(services: { LoadedService })
 
 	started = true
 
-	for _, service in services do
+	local orderedServices = table.clone(services)
+
+	table.sort(orderedServices, function(left, right)
+		local leftPriority = getInitPriority(left.Name)
+		local rightPriority = getInitPriority(right.Name)
+
+		if leftPriority ~= rightPriority then
+			return leftPriority < rightPriority
+		end
+
+		return left.Name < right.Name
+	end)
+
+	for _, service in orderedServices do
 		service:Start()
 		Logger.info("ServerKernel", `Started service: {service.Name}`)
 	end

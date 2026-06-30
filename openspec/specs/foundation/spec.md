@@ -10,7 +10,7 @@ Shared types, profile schema, remote registry, item/recipe constants, and initia
 ## Requirements
 ### Requirement: Extended player profile schema
 
-The system SHALL persist an extended `PlayerProfile` including survival stats, status effects, camp data (plot id, level, structures array, per-chest storage maps), unlocked recipes, monetization purchase tracking, tutorial completion, extended stats (playTime, deaths, **missionsCompleted**), hotbar (6 entries), equipped tool/coat ids, and **typed quest progress** map `quests: { [questId]: QuestState }`.
+The system SHALL persist an extended `PlayerProfile` including survival stats, status effects, camp data (plot id, level, structures array, per-chest storage maps), unlocked recipes, monetization purchase tracking, tutorial completion, extended stats (playTime, deaths, missionsCompleted), hotbar (6 entries), equipped tool/coat ids, typed quest progress map `quests`, **`helpers` map**, and **`lostHelpers` array**.
 
 #### Scenario: New player defaults
 
@@ -29,6 +29,8 @@ The system SHALL persist an extended `PlayerProfile` including survival stats, s
 - AND equipped.toolItemId and equipped.coatItemId are nil
 - AND `quests` is an empty map
 - AND `stats.missionsCompleted` is an empty array
+- AND `helpers` is an empty map
+- AND `lostHelpers` is an empty array
 
 ### Requirement: Player locale preference (GDD v1.2)
 
@@ -125,6 +127,16 @@ The system SHALL register `QuestTrackEvent` under `ReplicatedStorage.Remotes.Eve
 - GIVEN a player profile loaded successfully
 - WHEN initial sync runs
 - THEN `QuestProgressEvent` fires with current quest progress, level, xp, and tracked quest id (if any)
+
+### Requirement: Helper remotes registry
+
+The system SHALL register `HelperUpdatedEvent`, `FeedHelperEvent`, `CureHelperEvent`, and `SetHelperModeEvent` under `ReplicatedStorage.Remotes.Events`.
+
+#### Scenario: Helper remotes exist at server start
+
+- GIVEN the server has finished `NetworkingService:Init`
+- WHEN `FeedHelperEvent` is queried
+- THEN a RemoteEvent instance exists with that name
 
 ## Related
 

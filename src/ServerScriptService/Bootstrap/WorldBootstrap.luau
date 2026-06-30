@@ -6,11 +6,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Logger = require(ReplicatedStorage.Shared.Utilities.Logger)
 local ResourceNodeModelFactory = require(ReplicatedStorage.Shared.World.ResourceNodeModelFactory)
 local FaunaConstants = require(ReplicatedStorage.Shared.Constants.FaunaConstants)
+local HelperConstants = require(ReplicatedStorage.Shared.Constants.HelperConstants)
 local WorldConstants = require(ReplicatedStorage.Shared.Constants.WorldConstants)
 
 export type WorldBootstrapModule = {
 	ensureDevWorld: () -> (),
 	ensureFaunaSpawns: () -> (),
+	ensureHelperSpawns: () -> (),
 }
 
 local WorldBootstrap = {}
@@ -52,6 +54,9 @@ local function createBiomeZone(
 	local existing = parent:FindFirstChild(name)
 
 	if existing ~= nil and existing:IsA("BasePart") then
+		existing.Position = position
+		existing.Size = size
+		existing:SetAttribute(WorldConstants.BIOME_ID_ATTRIBUTE, biomeId)
 		return existing
 	end
 
@@ -151,6 +156,15 @@ function WorldBootstrap.ensureDevWorld()
 		Color3.fromRGB(110, 170, 110)
 	)
 
+	createBiomeZone(
+		biomeZonesFolder,
+		"forest_deep",
+		"forest_deep",
+		Vector3.new(280, -5, 50),
+		Vector3.new(260, 20, 260),
+		Color3.fromRGB(45, 95, 45)
+	)
+
 	local nodeDefinitions = {
 		{ id = "berry_bush_01", archetype = "berry_bush", type = "gather", outputs = "berry:2-3", position = Vector3.new(260, 0, 64) },
 		{ id = "berry_bush_02", archetype = "berry_bush", type = "gather", outputs = "berry:2-3", position = Vector3.new(260, 0, 110) },
@@ -216,6 +230,46 @@ function WorldBootstrap.ensureFaunaSpawns()
 	end
 
 	Logger.info("WorldBootstrap", `Fauna spawns ready with {#spawnDefinitions} markers`)
+end
+
+local function createHelperSpawn(parent: Folder, name: string, helperTypeId: string, position: Vector3): BasePart
+	local existing = parent:FindFirstChild(name)
+
+	if existing ~= nil and existing:IsA("BasePart") then
+		existing.Position = position
+		existing:SetAttribute(HelperConstants.HELPER_TYPE_ATTRIBUTE, helperTypeId)
+		return existing
+	end
+
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.Transparency = 1
+	part.Size = Vector3.new(2, 1, 2)
+	part.Position = position
+	part:SetAttribute(HelperConstants.HELPER_TYPE_ATTRIBUTE, helperTypeId)
+	CollectionService:AddTag(part, HelperConstants.HELPER_SPAWN_TAG)
+	part.Parent = parent
+
+	return part
+end
+
+function WorldBootstrap.ensureHelperSpawns()
+	local worldFolder = getWorldFolder()
+	local helperSpawnsFolder = getSubfolder(worldFolder, "HelperSpawns")
+
+	local spawnDefinitions = {
+		{ name = "lumberjack_spawn_01", helperTypeId = "lumberjack", position = Vector3.new(295, 0, 38) },
+	}
+
+	for _, spawnInfo in spawnDefinitions do
+		createHelperSpawn(helperSpawnsFolder, spawnInfo.name, spawnInfo.helperTypeId, spawnInfo.position)
+	end
+
+	Logger.info("WorldBootstrap", `Helper spawns ready with {#spawnDefinitions} markers`)
 end
 
 return WorldBootstrap

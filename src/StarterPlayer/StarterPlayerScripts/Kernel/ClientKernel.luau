@@ -26,6 +26,7 @@ local INIT_ORDER = {
 	"EquippedToolController",
 	"FaunaController",
 	"QuestController",
+	"HelperController",
 	"UIController",
 }
 

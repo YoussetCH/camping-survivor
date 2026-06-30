@@ -11,6 +11,8 @@ local CraftingTypes = require(ReplicatedStorage.Shared.Types.Crafting)
 local PlayerProfileTypes = require(ReplicatedStorage.Shared.Types.PlayerProfile)
 local QuestTypes = require(ReplicatedStorage.Shared.Types.Quest)
 local SurvivalTypes = require(ReplicatedStorage.Shared.Types.Survival)
+local HelperConstants = require(ReplicatedStorage.Shared.Constants.HelperConstants)
+local HelperTypes = require(ReplicatedStorage.Shared.Types.Helper)
 
 local PlayerSyncService = BaseService.new("PlayerSyncService")
 
@@ -75,6 +77,18 @@ local function buildRecipesSnapshot(data: PlayerProfileTypes.PlayerProfile): Cra
 	}
 end
 
+local function buildHelperSnapshot(
+	data: PlayerProfileTypes.PlayerProfile,
+	lastRemovedInstanceId: string?
+): HelperTypes.HelperSnapshot
+	return {
+		helpers = data.helpers,
+		lostHelpers = data.lostHelpers,
+		maxHelpers = HelperConstants.MAX_HELPERS_SOLO,
+		lastRemovedInstanceId = lastRemovedInstanceId,
+	}
+end
+
 function PlayerSyncService.syncSurvivalToClient(player: Player, data: PlayerProfileTypes.PlayerProfile)
 	Networking.getEvent("SurvivalUpdatedEvent"):FireClient(player, buildSurvivalSnapshot(data))
 end
@@ -103,12 +117,24 @@ function PlayerSyncService.syncQuestToClient(
 	)
 end
 
+function PlayerSyncService.syncHelpersToClient(
+	player: Player,
+	data: PlayerProfileTypes.PlayerProfile,
+	lastRemovedInstanceId: string?
+)
+	Networking.getEvent("HelperUpdatedEvent"):FireClient(
+		player,
+		buildHelperSnapshot(data, lastRemovedInstanceId)
+	)
+end
+
 function PlayerSyncService.syncToClient(player: Player, data: PlayerProfileTypes.PlayerProfile)
 	PlayerSyncService.syncSurvivalToClient(player, data)
 	PlayerSyncService.syncInventoryToClient(player, data)
 	PlayerSyncService.syncRecipesToClient(player, data)
 	PlayerSyncService.syncCampToClient(player, data)
 	PlayerSyncService.syncQuestToClient(player, data, nil, nil)
+	PlayerSyncService.syncHelpersToClient(player, data, nil)
 	Logger.debug("PlayerSyncService", `Synced domain state to {player.Name}`)
 end
 

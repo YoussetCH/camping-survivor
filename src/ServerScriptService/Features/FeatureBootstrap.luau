@@ -29,6 +29,7 @@ local FeatureBootstrap: FeatureBootstrapModule = {
 		require(script.Parent.Behaviors.ChestBehavior)
 
 		require(script.Parent.FaunaBootstrap).init()
+		require(script.Parent.HelperBootstrap).init()
 	end,
 	bindCampSync = function(syncCamp)
 		ChestBehavior.setSyncCamp(syncCamp)

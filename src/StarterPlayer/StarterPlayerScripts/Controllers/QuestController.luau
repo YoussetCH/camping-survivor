@@ -13,6 +13,7 @@ local QuestJournalModule = require(ReplicatedStorage.Shared.UI.Components.QuestJ
 local QuestTrackerModule = require(ReplicatedStorage.Shared.UI.Components.QuestTracker)
 local TutorialOverlayModule = require(ReplicatedStorage.Shared.UI.Components.TutorialOverlay)
 local QuestTypes = require(ReplicatedStorage.Shared.Types.Quest)
+local PlayerProfileTypes = require(ReplicatedStorage.Shared.Types.PlayerProfile)
 
 local QuestController = BaseController.new("QuestController")
 
@@ -153,6 +154,29 @@ local function ensureUi()
 	toastCorner.Parent = toastLabel
 end
 
+local function buildSnapshotFromProfile(profileData: PlayerProfileTypes.PlayerProfile): QuestTypes.QuestSnapshot
+	local snapshot: QuestTypes.QuestSnapshot = {
+		progress = if type(profileData.quests) == "table" then profileData.quests else {},
+		tutorialCompleted = profileData.tutorialCompleted == true,
+		trackedQuestId = nil,
+		activeQuestIds = {},
+		stats = {
+			level = if type(profileData.stats) == "table" then profileData.stats.level else 1,
+			xp = if type(profileData.stats) == "table" then profileData.stats.xp else 0,
+		},
+		lastCompletedQuestId = nil,
+	}
+
+	for questId, state in snapshot.progress do
+		if type(state) == "table" and state.status == "active" then
+			table.insert(snapshot.activeQuestIds, questId)
+		end
+	end
+
+	table.sort(snapshot.activeQuestIds)
+	return snapshot
+end
+
 function QuestController:Init()
 	local trove = self:GetTrove()
 
@@ -160,6 +184,14 @@ function QuestController:Init()
 
 	trove:Connect(Networking.getEvent("QuestProgressEvent").OnClientEvent, function(snapshot: QuestTypes.QuestSnapshot)
 		applySnapshot(snapshot)
+	end)
+
+	trove:Connect(Networking.getEvent("PlayerDataLoadedEvent").OnClientEvent, function(profileData: PlayerProfileTypes.PlayerProfile)
+		local incoming = buildSnapshotFromProfile(profileData)
+
+		if latestSnapshot == nil or #incoming.activeQuestIds >= #latestSnapshot.activeQuestIds then
+			applySnapshot(incoming)
+		end
 	end)
 
 	trove:Connect(Localization.LocaleChanged, function()
@@ -191,6 +223,30 @@ end
 
 function QuestController:Start()
 	Networking.getEvent("QuestUiOpenedEvent"):FireServer("stats")
+
+	task.defer(function()
+		local syncController = ClientKernel.getController("ClientSyncController")
+
+		if syncController ~= nil then
+			local cached = syncController:GetQuest()
+
+			if cached ~= nil then
+				applySnapshot(cached)
+			end
+		end
+	end)
+
+	task.delay(1, function()
+		local syncController = ClientKernel.getController("ClientSyncController")
+
+		if syncController ~= nil then
+			local cached = syncController:GetQuest()
+
+			if cached ~= nil then
+				applySnapshot(cached)
+			end
+		end
+	end)
 end
 
 return QuestController

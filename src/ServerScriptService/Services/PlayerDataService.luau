@@ -58,20 +58,35 @@ local function normalizeStats(data: PlayerProfileTypes.PlayerProfile)
 	end
 end
 
+local function normalizeHelpers(data: PlayerProfileTypes.PlayerProfile)
+	if type(data.helpers) ~= "table" then
+		data.helpers = {}
+	end
+
+	if type(data.lostHelpers) ~= "table" then
+		data.lostHelpers = {}
+	end
+end
+
 local function onClientReady(player: Player)
 	if repository == nil then
 		return
 	end
 
-	local data = repository:GetData(player)
+	task.defer(function()
+		local QuestService = require(ServerScriptService.Services.QuestService)
+		QuestService.reconcileForPlayer(player)
 
-	if data == nil then
-		return
-	end
+		local data = repository:GetData(player)
 
-	Networking.getEvent("PlayerDataLoadedEvent"):FireClient(player, data)
-	PlayerSyncService.syncToClient(player, data)
-	Logger.debug("PlayerDataService", `Re-synced profile for {player.Name} after client ready`)
+		if data == nil then
+			return
+		end
+
+		Networking.getEvent("PlayerDataLoadedEvent"):FireClient(player, data)
+		PlayerSyncService.syncToClient(player, data)
+		Logger.debug("PlayerDataService", `Re-synced profile for {player.Name} after client ready`)
+	end)
 end
 
 local function onPlayerAdded(player: Player)
@@ -91,6 +106,7 @@ local function onPlayerAdded(player: Player)
 		normalizeSettings(data)
 		normalizeInventory(data)
 		normalizeStats(data)
+		normalizeHelpers(data)
 
 		local CraftingService = require(ServerScriptService.Services.CraftingService)
 		CraftingService.ensureTutorialRecipesUnlocked(player, data)

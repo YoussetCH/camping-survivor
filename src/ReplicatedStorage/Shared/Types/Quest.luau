@@ -7,6 +7,7 @@ export type QuestObjectiveKind =
 	| "survive_cold"
 	| "defeat_fauna"
 	| "open_ui"
+	| "escort_to_plot"
 
 export type QuestObjectiveProgress = {
 	kind: QuestObjectiveKind,
@@ -18,6 +19,7 @@ export type QuestObjectiveProgress = {
 	blueprintId: string?,
 	speciesId: string?,
 	panelId: string?,
+	helperTypeId: string?,
 }
 
 export type QuestState = {

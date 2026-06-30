@@ -32,6 +32,8 @@ export type PlayerProfileTemplate = {
 		structures: {},
 		chests: {},
 	},
+	helpers: {},
+	lostHelpers: { string },
 	recipes: {
 		unlocked: { string },
 	},
@@ -74,6 +76,8 @@ local PlayerProfileTemplate: PlayerProfileTemplate = {
 		structures = {},
 		chests = {},
 	},
+	helpers = {},
+	lostHelpers = {},
 	recipes = {
 		unlocked = {},
 	},

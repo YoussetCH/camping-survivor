@@ -34,6 +34,10 @@ local Remotes = {
 		"DodgeResultEvent",
 		"QuestTrackEvent",
 		"QuestUiOpenedEvent",
+		"HelperUpdatedEvent",
+		"FeedHelperEvent",
+		"CureHelperEvent",
+		"SetHelperModeEvent",
 	},
 	Functions = {},
 }

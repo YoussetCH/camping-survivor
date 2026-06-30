@@ -13,6 +13,7 @@ export type QuestObjectiveDef = {
 	blueprintId: string?,
 	speciesId: string?,
 	panelId: string?,
+	helperTypeId: string?,
 }
 
 export type QuestRewardItems = { itemId: string, quantity: number }
@@ -181,6 +182,18 @@ local definitions: { [string]: QuestDefinition } = {
 			items = { { itemId = "berry", quantity = 3 } },
 		},
 		prerequisites = { "m00_wood" },
+		nextQuestId = "main_05_lumberjack",
+	}),
+	main_05_lumberjack = quest({
+		id = "main_05_lumberjack",
+		questType = "main",
+		titleKey = "quest.main_05_lumberjack.title",
+		objectiveKeys = { "quest.main_05_lumberjack.objective.1" },
+		objectives = {
+			{ kind = "escort_to_plot", target = 1, helperTypeId = "lumberjack" },
+		},
+		rewards = { xp = 120 },
+		prerequisites = { "main_01_chest" },
 	}),
 	side_01_berries = quest({
 		id = "side_01_berries",
